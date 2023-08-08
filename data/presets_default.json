@@ -179,7 +179,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -385,7 +385,7 @@
         "key_appearance_match_dungeon": false,
         "potcrate_textures_specific": [],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -598,7 +598,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -815,7 +815,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -1026,7 +1026,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -1239,7 +1239,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -1625,7 +1625,11 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "all",
+        "ocarina_songs": [
+            "frog",
+            "warp",
+            "frogs2"
+        ],
         "text_shuffle": "complete",
         "damage_multiplier": "ohko",
         "deadly_bonks": "ohko",
@@ -1821,7 +1825,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -2048,7 +2052,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -2265,7 +2269,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
@@ -2463,7 +2467,7 @@
             "hearts"
         ],
         "soa_unlocks_potcrate_texture": false,
-        "ocarina_songs": "off",
+        "ocarina_songs": [],
         "text_shuffle": "none",
         "damage_multiplier": "normal",
         "deadly_bonks": "none",
