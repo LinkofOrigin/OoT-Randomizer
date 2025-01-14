@@ -2448,7 +2448,7 @@ class SettingInfos:
             Controls how the prices for Special Deal items in shops are
             selected. For more control, utilize the plandomizer.
 
-            'Vanilla': 'Each item will be sold for the price of the item
+            'Vanilla': Each item will be sold for the price of the item
             that appears in its slot in the vanilla game.
 
             'Weighted': Shop prices will be biased towards slightly below
