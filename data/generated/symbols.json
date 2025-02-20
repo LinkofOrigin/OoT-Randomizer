@@ -32,7 +32,11 @@
         "length": 4
     },
     "AUDIO_THREAD_MEM_START": {
+<<<<<<< HEAD
         "address": "034C2190",
+=======
+        "address": "034C1CA0",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 0
     },
     "AUTO_TRACKER_CONTEXT": {
@@ -344,11 +348,19 @@
         "length": 1
     },
     "CHEST_SIZE_MATCH_CONTENTS": {
+<<<<<<< HEAD
         "address": "034AD620",
         "length": 4
     },
     "CHEST_SIZE_TEXTURE": {
         "address": "034AD61C",
+=======
+        "address": "034AD134",
+        "length": 4
+    },
+    "CHEST_SIZE_TEXTURE": {
+        "address": "034AD130",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 4
     },
     "CHEST_SKULL_TEXTURE": {
@@ -356,11 +368,19 @@
         "length": 1
     },
     "CHEST_TEXTURE_MATCH_CONTENTS": {
+<<<<<<< HEAD
         "address": "034AD624",
         "length": 4
     },
     "COMPLETE_MASK_QUEST": {
         "address": "034C1E30",
+=======
+        "address": "034AD138",
+        "length": 4
+    },
+    "COMPLETE_MASK_QUEST": {
+        "address": "034C1940",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 1
     },
     "COOP_CONTEXT": {
@@ -400,11 +420,19 @@
         "length": 1
     },
     "DPAD_RESOURCE": {
+<<<<<<< HEAD
         "address": "034A4AA8",
         "length": 0
     },
     "DPAD_RESOURCE_END": {
         "address": "034A52A8",
+=======
+        "address": "034A4628",
+        "length": 0
+    },
+    "DPAD_RESOURCE_END": {
+        "address": "034A4E28",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 0
     },
     "DUNGEONS_SHUFFLED": {
@@ -428,7 +456,11 @@
         "length": 1
     },
     "EXTRA_BOWLING_SHUFFLE": {
+<<<<<<< HEAD
         "address": "034AD618",
+=======
+        "address": "034AD12C",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 4
     },
     "FAST_BUNNY_HOOD_ENABLED": {
@@ -440,7 +472,11 @@
         "length": 1
     },
     "FILENAME_ENCODING": {
+<<<<<<< HEAD
         "address": "034AD02C",
+=======
+        "address": "034ACB40",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 256
     },
     "FIX_BROKEN_DROPS": {
@@ -452,6 +488,7 @@
         "length": 160
     },
     "FONT_CHAR_TEX_HEIGHT": {
+<<<<<<< HEAD
         "address": "034A4810",
         "length": 4
     },
@@ -465,6 +502,21 @@
     },
     "FONT_RESOURCE_END": {
         "address": "034A6770",
+=======
+        "address": "034A4390",
+        "length": 4
+    },
+    "FONT_CHAR_TEX_WIDTH": {
+        "address": "034A4394",
+        "length": 4
+    },
+    "FONT_RESOURCE": {
+        "address": "034A4E28",
+        "length": 0
+    },
+    "FONT_RESOURCE_END": {
+        "address": "034A62F0",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 0
     },
     "FREE_BOMBCHU_DROPS": {
@@ -476,11 +528,19 @@
         "length": 4
     },
     "GANON_BOSS_KEY_CONDITION": {
+<<<<<<< HEAD
         "address": "034C1F1E",
         "length": 1
     },
     "GANON_BOSS_KEY_CONDITION_COUNT": {
         "address": "034C1F1C",
+=======
+        "address": "034C1A2E",
+        "length": 1
+    },
+    "GANON_BOSS_KEY_CONDITION_COUNT": {
+        "address": "034C1A2C",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 2
     },
     "GET_CHEST_OVERRIDE_WRAPPER": {
@@ -532,7 +592,11 @@
         "length": 1
     },
     "KAKARIKO_WEATHER_FORECAST": {
+<<<<<<< HEAD
         "address": "034C1F88",
+=======
+        "address": "034C1A98",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 1
     },
     "KEYRING_BOSSKEY_CONDITION": {
@@ -560,7 +624,11 @@
         "length": 1
     },
     "MAX_RUPEES": {
+<<<<<<< HEAD
         "address": "034C1E32",
+=======
+        "address": "034C1942",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 1
     },
     "MOVED_ADULT_KING_ZORA": {
@@ -584,11 +652,19 @@
         "length": 1
     },
     "NO_ESCAPE_SEQUENCE": {
+<<<<<<< HEAD
         "address": "034AD6DE",
         "length": 1
     },
     "NUM_FONT_CHARS": {
         "address": "034A480C",
+=======
+        "address": "034AD1F2",
+        "length": 1
+    },
+    "NUM_FONT_CHARS": {
+        "address": "034A438C",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 4
     },
     "OCARINAS_SHUFFLED": {
@@ -596,7 +672,11 @@
         "length": 1
     },
     "OPEN_KAKARIKO": {
+<<<<<<< HEAD
         "address": "034C1E31",
+=======
+        "address": "034C1941",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 1
     },
     "OUTGOING_ITEM": {
@@ -676,7 +756,11 @@
         "length": 2
     },
     "RANDOMIZER_RNG_SEED": {
+<<<<<<< HEAD
         "address": "034C1F18",
+=======
+        "address": "034C1A28",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 4
     },
     "RANDO_CONTEXT": {
@@ -684,7 +768,11 @@
         "length": 4
     },
     "REQUIRED_PENDING_FRAMES": {
+<<<<<<< HEAD
         "address": "034A4470",
+=======
+        "address": "034A4000",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 1
     },
     "REWARDS_AS_ITEMS": {
@@ -692,7 +780,11 @@
         "length": 1
     },
     "RNG_SEED_INT": {
+<<<<<<< HEAD
         "address": "034AD3E0",
+=======
+        "address": "034ACEF4",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 4
     },
     "SET_BONK_FLAG": {
@@ -772,7 +864,11 @@
         "length": 1
     },
     "Sram_InitNewSave": {
+<<<<<<< HEAD
         "address": "034AD424",
+=======
+        "address": "034ACF38",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 4
     },
     "TCG_REQUIRES_LENS": {
@@ -796,11 +892,19 @@
         "length": 2
     },
     "TRIFORCE_SPRITE_RESOURCE": {
+<<<<<<< HEAD
         "address": "034A6770",
         "length": 0
     },
     "TRIFORCE_SPRITE_RESOURCE_END": {
         "address": "034A7770",
+=======
+        "address": "034A62F0",
+        "length": 0
+    },
+    "TRIFORCE_SPRITE_RESOURCE_END": {
+        "address": "034A72F0",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 0
     },
     "TWINROVA_ACTION_TIMER": {
@@ -828,6 +932,7 @@
         "length": 16
     },
     "a_button": {
+<<<<<<< HEAD
         "address": "034A96C0",
         "length": 4
     },
@@ -1401,9 +1506,585 @@
     },
     "triforce_sprite": {
         "address": "034A95D0",
+=======
+        "address": "034A9240",
+        "length": 4
+    },
+    "a_note_b": {
+        "address": "034A922C",
+        "length": 4
+    },
+    "a_note_font_glow_base": {
+        "address": "034A9214",
+        "length": 4
+    },
+    "a_note_font_glow_max": {
+        "address": "034A9210",
+        "length": 4
+    },
+    "a_note_g": {
+        "address": "034A9230",
+        "length": 4
+    },
+    "a_note_glow_base": {
+        "address": "034A921C",
+        "length": 4
+    },
+    "a_note_glow_max": {
+        "address": "034A9218",
+        "length": 4
+    },
+    "a_note_r": {
+        "address": "034A9234",
+        "length": 4
+    },
+    "active_item_action_id": {
+        "address": "034AEF6C",
+        "length": 4
+    },
+    "active_item_fast_chest": {
+        "address": "034AEF5C",
+        "length": 4
+    },
+    "active_item_graphic_id": {
+        "address": "034AEF60",
+        "length": 4
+    },
+    "active_item_object_id": {
+        "address": "034AEF64",
+        "length": 4
+    },
+    "active_item_row": {
+        "address": "034AEF70",
+        "length": 4
+    },
+    "active_item_text_id": {
+        "address": "034AEF68",
+        "length": 4
+    },
+    "active_override": {
+        "address": "034AEF78",
+        "length": 16
+    },
+    "active_override_is_outgoing": {
+        "address": "034AEF74",
+        "length": 4
+    },
+    "actor_categories": {
+        "address": "034A7354",
+        "length": 192
+    },
+    "adultSkeleton": {
+        "address": "034ACD3C",
+        "length": 252
+    },
+    "adult_safe": {
+        "address": "034C194E",
+        "length": 1
+    },
+    "alt_overrides": {
+        "address": "034AD398",
+        "length": 3200
+    },
+    "b_button": {
+        "address": "034A923C",
+        "length": 4
+    },
+    "beating_dd": {
+        "address": "034A9248",
+        "length": 4
+    },
+    "beating_no_dd": {
+        "address": "034A9250",
+        "length": 4
+    },
+    "bgm_sequence_ids": {
+        "address": "034ACE38",
+        "length": 188
+    },
+    "bk_display": {
+        "address": "034AD1A8",
+        "length": 1
+    },
+    "bosses_warps": {
+        "address": "034A7834",
+        "length": 340
+    },
+    "botw_rooms": {
+        "address": "034A8178",
+        "length": 156
+    },
+    "buffer_password": {
+        "address": "034AD1E8",
+        "length": 6
+    },
+    "buttons_sprite": {
+        "address": "034A90D0",
+        "length": 16
+    },
+    "c_button": {
+        "address": "034A9238",
+        "length": 4
+    },
+    "c_note_b": {
+        "address": "034A9220",
+        "length": 4
+    },
+    "c_note_font_glow_base": {
+        "address": "034A9204",
+        "length": 4
+    },
+    "c_note_font_glow_max": {
+        "address": "034A9200",
+        "length": 4
+    },
+    "c_note_g": {
+        "address": "034A9224",
+        "length": 4
+    },
+    "c_note_glow_base": {
+        "address": "034A920C",
+        "length": 4
+    },
+    "c_note_glow_max": {
+        "address": "034A9208",
+        "length": 4
+    },
+    "c_note_r": {
+        "address": "034A9228",
+        "length": 4
+    },
+    "cfg_item_overrides": {
+        "address": "034AEFA0",
+        "length": 35200
+    },
+    "childSkeleton": {
+        "address": "034ACC40",
+        "length": 252
+    },
+    "child_safe": {
+        "address": "034C194D",
+        "length": 1
+    },
+    "collectible_mutex": {
+        "address": "034AD308",
+        "length": 4
+    },
+    "collectible_override": {
+        "address": "034AD2F8",
+        "length": 16
+    },
+    "collectible_override_flags": {
+        "address": "034AD390",
+        "length": 4
+    },
+    "cooldown": {
+        "address": "034AD1EE",
+        "length": 2
+    },
+    "curr_drawn_actor": {
+        "address": "034C1954",
+        "length": 4
+    },
+    "curr_scene_setup": {
+        "address": "034C1A88",
+        "length": 1
+    },
+    "dc_rooms": {
+        "address": "034A8930",
+        "length": 208
+    },
+    "debug_text_color": {
+        "address": "034A8D98",
+        "length": 3
+    },
+    "debug_text_height": {
+        "address": "034A3E08",
+        "length": 1
+    },
+    "debug_text_width": {
+        "address": "034A3E09",
+        "length": 1
+    },
+    "defaultDDHeart": {
+        "address": "034A4074",
+        "length": 6
+    },
+    "defaultHeart": {
+        "address": "034A407C",
+        "length": 6
+    },
+    "deku_rooms": {
+        "address": "034A8A00",
+        "length": 312
+    },
+    "dpad_sprite": {
+        "address": "034A9160",
+        "length": 16
+    },
+    "drop_collectible_override_flag": {
+        "address": "034AEF8C",
+        "length": 8
+    },
+    "dummy_actor": {
+        "address": "034AEF94",
+        "length": 4
+    },
+    "dungeon_count": {
+        "address": "034A8EF4",
+        "length": 4
+    },
+    "dungeon_rooms": {
+        "address": "034A7C98",
+        "length": 104
+    },
+    "dungeon_warps": {
+        "address": "034A8B38",
+        "length": 442
+    },
+    "dungeons": {
+        "address": "034A8DC0",
+        "length": 308
+    },
+    "empty_dlist": {
+        "address": "034A91C0",
+        "length": 8
+    },
+    "extended_savectx": {
+        "address": "034C1A30",
+        "length": 88
+    },
+    "extern_ctxt": {
+        "address": "034A8F24",
+        "length": 20
+    },
+    "fire_rooms": {
+        "address": "034A85F0",
+        "length": 364
+    },
+    "flag_categories": {
+        "address": "034A72F4",
+        "length": 96
+    },
+    "float_precision": {
+        "address": "034A8D95",
+        "length": 1
+    },
+    "font_sprite": {
+        "address": "034A9170",
+        "length": 16
+    },
+    "forest_rooms": {
+        "address": "034A875C",
+        "length": 312
+    },
+    "freecam_modes": {
+        "address": "034A3EA8",
+        "length": 66
+    },
+    "ganon_rooms": {
+        "address": "034A7D00",
+        "length": 364
+    },
+    "gtg_rooms": {
+        "address": "034A7E6C",
+        "length": 312
+    },
+    "hash_sprites": {
+        "address": "034A90A4",
+        "length": 8
+    },
+    "hash_symbols": {
+        "address": "034A9064",
+        "length": 64
+    },
+    "heap_next": {
+        "address": "034C1A94",
+        "length": 4
+    },
+    "heart_sprite": {
+        "address": "034A90F0",
+        "length": 16
+    },
+    "hideout_rooms": {
+        "address": "034A7FA4",
+        "length": 208
+    },
+    "ice_rooms": {
+        "address": "034A8074",
+        "length": 260
+    },
+    "icon_sprites": {
+        "address": "034A3F78",
+        "length": 12
+    },
+    "illegal_model": {
+        "address": "034C1950",
+        "length": 2
+    },
+    "incoming_junk": {
+        "address": "034AEF58",
+        "length": 2
+    },
+    "input_icon_height": {
+        "address": "034A408E",
+        "length": 1
+    },
+    "input_icon_width": {
+        "address": "034A408F",
+        "length": 1
+    },
+    "input_number_height": {
+        "address": "034A408C",
+        "length": 1
+    },
+    "input_number_width": {
+        "address": "034A408D",
+        "length": 1
+    },
+    "item_digit_sprite": {
+        "address": "034A9110",
+        "length": 16
+    },
+    "item_draw_table": {
+        "address": "034A9254",
+        "length": 5760
+    },
+    "item_overrides_count": {
+        "address": "034AEF98",
+        "length": 4
+    },
+    "item_table": {
+        "address": "034AAA00",
+        "length": 8512
+    },
+    "items": {
+        "address": "034A90B4",
+        "length": 21
+    },
+    "items_debug": {
+        "address": "034A7414",
+        "length": 1054
+    },
+    "items_sprite": {
+        "address": "034A9190",
+        "length": 16
+    },
+    "jabu_rooms": {
+        "address": "034A8894",
+        "length": 156
+    },
+    "key_counts": {
+        "address": "034AA9DC",
+        "length": 34
+    },
+    "key_rupee_clock_sprite": {
+        "address": "034A9130",
+        "length": 16
+    },
+    "last_fog_distance": {
+        "address": "034A8F38",
+        "length": 4
+    },
+    "left_alignment": {
+        "address": "034A408A",
+        "length": 2
+    },
+    "linkhead_skull_sprite": {
+        "address": "034A9100",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
+        "length": 16
+    },
+    "loaded_room_bit_offset": {
+        "address": "034A90AC",
+        "length": 2
+    },
+    "loaded_scene_room_setup": {
+        "address": "034A90B0",
+        "length": 4
+    },
+    "medals": {
+        "address": "034A8DA8",
+        "length": 24
+    },
+    "medals_sprite": {
+        "address": "034A91A0",
+        "length": 16
+    },
+    "menu_categories": {
+        "address": "034A8CF4",
+        "length": 160
+    },
+    "menu_cooldown": {
+        "address": "034A8D94",
+        "length": 1
+    },
+    "missing_dlist": {
+        "address": "034C194C",
+        "length": 1
+    },
+    "normal_dd": {
+        "address": "034A9244",
+        "length": 4
+    },
+    "normal_no_dd": {
+        "address": "034A924C",
+        "length": 4
+    },
+    "num_override_flags": {
+        "address": "034AD394",
+        "length": 2
+    },
+    "num_to_bits": {
+        "address": "034ACEF8",
+        "length": 64
+    },
+    "object_slots": {
+        "address": "034C1958",
+        "length": 192
+    },
+    "ocarina_button_sprite": {
+        "address": "034A90E0",
+        "length": 16
+    },
+    "outgoing_queue": {
+        "address": "034AD310",
+        "length": 128
+    },
+    "overworld_warps": {
+        "address": "034A7988",
+        "length": 782
+    },
+    "password_index": {
+        "address": "034A9060",
+        "length": 1
+    },
+    "quest_items_sprite": {
+        "address": "034A9180",
+        "length": 16
+    },
+    "randoGfxPoolIndex": {
+        "address": "034B7920",
+        "length": 1
+    },
+    "randoGfxPools": {
+        "address": "034B7928",
+        "length": 40960
+    },
+    "rando_overlay_db": {
+        "address": "034C1930",
+        "length": 16
+    },
+    "reward_rows": {
+        "address": "034A8D9C",
+        "length": 9
+    },
+    "room_flags": {
+        "address": "034AD1F8",
+        "length": 256
+    },
+    "rupee_colors": {
+        "address": "034A4068",
+        "length": 12
+    },
+    "rupee_digit_sprite": {
+        "address": "034A9120",
+        "length": 16
+    },
+    "satisfied_pending_frames": {
+        "address": "034AEF56",
+        "length": 1
+    },
+    "scene_fog_distance": {
+        "address": "034A8F3C",
+        "length": 4
+    },
+    "setup_db": {
+        "address": "034A91C8",
+        "length": 40
+    },
+    "shadow_rooms": {
+        "address": "034A834C",
+        "length": 364
+    },
+    "shooting_gallery_show_message": {
+        "address": "034C1944",
+        "length": 1
+    },
+    "show_clock": {
+        "address": "034AD13C",
+        "length": 1
+    },
+    "silver_rupee_vars": {
+        "address": "034AA8D4",
+        "length": 264
+    },
+    "song_note_sprite": {
+        "address": "034A9140",
+        "length": 16
+    },
+    "spawn_actor_with_flag": {
+        "address": "034AEF88",
+        "length": 4
+    },
+    "spirit_rooms": {
+        "address": "034A8214",
+        "length": 312
+    },
+    "stones_sprite": {
+        "address": "034A91B0",
+        "length": 16
+    },
+    "tentatives": {
+        "address": "034AD1F0",
+        "length": 2
+    },
+    "text_cursor_border_base": {
+        "address": "034A91F4",
+        "length": 4
+    },
+    "text_cursor_border_max": {
+        "address": "034A91F0",
+        "length": 4
+    },
+    "text_cursor_inner_base": {
+        "address": "034A91FC",
+        "length": 4
+    },
+    "text_cursor_inner_max": {
+        "address": "034A91F8",
+        "length": 4
+    },
+    "text_height": {
+        "address": "034A41D8",
+        "length": 4
+    },
+    "text_width": {
+        "address": "034A41DC",
+        "length": 4
+    },
+    "texture_table": {
+        "address": "034ACF3C",
+        "length": 496
+    },
+    "top_alignment": {
+        "address": "034A4088",
+        "length": 2
+    },
+    "trade_quest_items": {
+        "address": "034A43A0",
+        "length": 616
+    },
+    "treasure_chest_game_show_message": {
+        "address": "034C1943",
+        "length": 1
+    },
+    "triforce_sprite": {
+        "address": "034A9150",
         "length": 16
     },
     "water_rooms": {
+<<<<<<< HEAD
         "address": "034A8938",
         "length": 312
     },
@@ -1417,6 +2098,21 @@
     },
     "xflag_scene_table": {
         "address": "034AF374",
+=======
+        "address": "034A84B8",
+        "length": 312
+    },
+    "xflag_room_blob": {
+        "address": "034AE018",
+        "length": 3000
+    },
+    "xflag_room_table": {
+        "address": "034AEBD0",
+        "length": 700
+    },
+    "xflag_scene_table": {
+        "address": "034AEE8C",
+>>>>>>> 9734b436 (Allow big poe soul collect on Epona)
         "length": 202
     }
 }
