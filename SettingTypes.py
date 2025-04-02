@@ -10,7 +10,7 @@ from Utils import powerset
 class SettingInfo:
     def __init__(self, setting_type: type, gui_text: Optional[str], gui_type: Optional[str], shared: bool,
                  choices: Optional[dict | list] = None, default: Any = None, disabled_default: Any = None,
-                 disable: Optional[dict] = None, gui_tooltip: Optional[str] = None, gui_params: Optional[dict] = None,
+                 disable: Optional[dict] = None, conditional_visibility: Optional[dict] = None, gui_tooltip: Optional[str] = None, gui_params: Optional[dict] = None,
                  cosmetic: bool = False) -> None:
         self.type: type = setting_type  # type of the setting's value, used to properly convert types to setting strings
         self.shared: bool = shared  # whether the setting is one that should be shared, used in converting settings to a string
@@ -19,6 +19,7 @@ class SettingInfo:
         self.gui_type: Optional[str] = gui_type
         self.gui_tooltip: Optional[str] = "" if gui_tooltip is None else gui_tooltip
         self.gui_params: dict[str, Any] = {} if gui_params is None else gui_params  # additional parameters that the randomizer uses for the gui
+        self.conditional_visibility: Optional[dict] = conditional_visibility  # dictionary of settings and values that can enable this setting
         self.disable: Optional[dict] = disable  # dictionary of settings this setting disabled
         self.dependency = None  # lambda that determines if this is disabled. Generated later
 
@@ -162,9 +163,10 @@ class SettingInfoInt(SettingInfo):
     def __init__(self, gui_text: Optional[str], gui_type: Optional[str], shared: bool,
                  choices: Optional[dict | list] = None, default: Optional[int] = None,
                  disabled_default: Optional[int] = None, disable: Optional[dict] = None,
+                 conditional_visibility: Optional[dict] = None,
                  gui_tooltip: Optional[str] = None, gui_params: Optional[dict] = None, cosmetic: bool = False) -> None:
         super().__init__(setting_type=int, gui_text=gui_text, gui_type=gui_type, shared=shared, choices=choices,
-                         default=default, disabled_default=disabled_default, disable=disable, gui_tooltip=gui_tooltip,
+                         default=default, disabled_default=disabled_default, disable=disable, conditional_visibility=conditional_visibility, gui_tooltip=gui_tooltip,
                          gui_params=gui_params, cosmetic=cosmetic)
 
     def __get__(self, obj, obj_type=None) -> int:
@@ -299,6 +301,7 @@ class ComboboxInt(SettingInfoInt):
 class Scale(SettingInfoInt):
     def __init__(self, gui_text: Optional[str], default: Optional[int], minimum: int, maximum: int, step: int = 1,
                  gui_tooltip: Optional[str] = None, disable: Optional[dict] = None, disabled_default: Optional[int] = None,
+                 conditional_visibility: Optional[dict] = None,
                  shared: bool = False, gui_params: Optional[dict] = None, cosmetic: bool = False) -> None:
         choices = {
             i: str(i) for i in range(minimum, maximum+1, step)
@@ -311,7 +314,7 @@ class Scale(SettingInfoInt):
         gui_params['step'] = step
 
         super().__init__(gui_text=gui_text, gui_type='Scale', shared=shared, choices=choices, default=default,
-                         disabled_default=disabled_default, disable=disable, gui_tooltip=gui_tooltip,
+                         disabled_default=disabled_default, disable=disable, conditional_visibility=conditional_visibility, gui_tooltip=gui_tooltip,
                          gui_params=gui_params, cosmetic=cosmetic)
 
 

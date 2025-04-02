@@ -1264,6 +1264,27 @@ export class GeneratorComponent implements OnInit {
     }
 
   private triggerSettingVisibility(targetSetting: any, targetValue: boolean, triggeredChange: boolean) {
+      // Resolve logic that could conditionally enable this setting.
+      // ORDER MATTERS! Logic that could disable settings is below this, which gives that priority (and is what we want).
+      if (targetSetting["conditionally_controls_setting"] != null) {
+        targetSetting["conditionally_controls_setting"].split(",").forEach(setting => {
+
+          let dependentSetting = this.global.findSettingByName(setting);
+          let dependentSettingConditionalEnables = dependentSetting.conditional_visibility;
+          if (dependentSettingConditionalEnables != null) {
+            let conditionsMetToEnable = this.conditionsMetToEnable(dependentSettingConditionalEnables);
+            console.log("Setting should be enabled: " + dependentSetting.name + " => " + conditionsMetToEnable);
+            
+            if (conditionsMetToEnable != this.global.generator_settingsVisibilityMap[dependentSetting.name]) {
+              console.log("Setting conditionally changing visibility: " + dependentSetting.name + " => " + conditionsMetToEnable)
+              this.global.generator_settingsVisibilityMap[dependentSetting.name] = conditionsMetToEnable;
+              triggeredChange = true;
+            }
+          }
+        });
+      }
+    
+      // This list of settings could be disabled entirely (Legacy)
       targetSetting["controls_visibility_setting"].split(",").forEach(setting => {
 
         //Ignore settings that don't exist in this specific app
@@ -1272,17 +1293,57 @@ export class GeneratorComponent implements OnInit {
 
         let enabledChildren = false;
 
+        // If the setting can be enabled but its currently disabled, attempt to re-enable it.
         if (targetValue == false && this.global.generator_settingsVisibilityMap[setting] == true) {
           enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
         }
 
+        // If the setting will be disabled but it is currently enabled, note a change is occurring.
+        // Alternatively, if we enabled it earlier, note a change is occurring.
         if ((targetValue == true && this.global.generator_settingsVisibilityMap[setting] == false) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
           triggeredChange = true;
 
+      // targetValue = false => This setting will be enabled.
+      // targetValue = true  => This setting will be disabled.
         this.global.generator_settingsVisibilityMap[setting] = targetValue;
       });
 
     return triggeredChange;
+  }
+
+  private conditionsMetToEnable(settingConditions: any) {
+    let shouldEnable = false;
+    // There may be multiple combinations of conditions that may enable this setting.
+    // We'll check each one, and if one of them passes we'll enable the setting
+    for (let conditionName in settingConditions) {
+      console.log(conditionName + " => Evaluating condition...");
+      let conditionList = settingConditions[conditionName];
+      let conditionsPassed = [];
+      for (let i = 0; i < conditionList.length; i++) {
+        let condition = conditionList[i];
+        let partialConditionPassed = false;
+        // Only one of these conditional settings has to match the given value
+        for (let conditionalSettingName in condition) {
+          // If the conditional setting is currently set to the conditional value...
+          if (condition[conditionalSettingName] == this.global.generator_settingsMap[conditionalSettingName]) {
+            console.log(conditionName + " => Partial condition passed! Reason: " + conditionalSettingName + "=" + condition[conditionalSettingName]);
+            partialConditionPassed = true;
+            break;
+          }
+        }
+
+        conditionsPassed.push(partialConditionPassed);
+      };
+
+      // If one full condition passed, we'll enable the setting
+      if (!conditionsPassed.includes(false)) {
+        console.log(conditionName + " => Evaulated condition as PASSING!");
+        shouldEnable = true; // Could early exit after this, but letting it process all conditions for debugging purposes
+      }
+    }
+
+    console.log("Setting should be enabled due to conditions: " + shouldEnable);
+    return shouldEnable;
   }
 
   clearDeactivationsOfSetting(setting: any) {
