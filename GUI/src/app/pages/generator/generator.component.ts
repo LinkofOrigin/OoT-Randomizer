@@ -1273,10 +1273,8 @@ export class GeneratorComponent implements OnInit {
           let dependentSettingConditionalEnables = dependentSetting.conditional_visibility;
           if (dependentSettingConditionalEnables != null) {
             let conditionsMetToEnable = this.conditionsMetToEnable(dependentSettingConditionalEnables);
-            console.log("Setting should be enabled: " + dependentSetting.name + " => " + conditionsMetToEnable);
             
             if (conditionsMetToEnable != this.global.generator_settingsVisibilityMap[dependentSetting.name]) {
-              console.log("Setting conditionally changing visibility: " + dependentSetting.name + " => " + conditionsMetToEnable)
               this.global.generator_settingsVisibilityMap[dependentSetting.name] = conditionsMetToEnable;
               triggeredChange = true;
             }
@@ -1316,7 +1314,6 @@ export class GeneratorComponent implements OnInit {
     // There may be multiple combinations of conditions that may enable this setting.
     // We'll check each one, and if one of them passes we'll enable the setting
     for (let conditionName in settingConditions) {
-      console.log(conditionName + " => Evaluating condition...");
       let conditionList = settingConditions[conditionName];
       let conditionsPassed = [];
       for (let i = 0; i < conditionList.length; i++) {
@@ -1326,7 +1323,6 @@ export class GeneratorComponent implements OnInit {
         for (let conditionalSettingName in condition) {
           // If the conditional setting is currently set to the conditional value...
           if (condition[conditionalSettingName] == this.global.generator_settingsMap[conditionalSettingName]) {
-            console.log(conditionName + " => Partial condition passed! Reason: " + conditionalSettingName + "=" + condition[conditionalSettingName]);
             partialConditionPassed = true;
             break;
           }
@@ -1337,12 +1333,10 @@ export class GeneratorComponent implements OnInit {
 
       // If one full condition passed, we'll enable the setting
       if (!conditionsPassed.includes(false)) {
-        console.log(conditionName + " => Evaulated condition as PASSING!");
         shouldEnable = true; // Could early exit after this, but letting it process all conditions for debugging purposes
       }
     }
 
-    console.log("Setting should be enabled due to conditions: " + shouldEnable);
     return shouldEnable;
   }
 

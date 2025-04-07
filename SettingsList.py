@@ -717,7 +717,7 @@ class SettingInfos:
         },
         disable        = {
             True:  {'settings': ['ganon_bosskey_stones', 'ganon_bosskey_medallions', 'ganon_bosskey_rewards', 'ganon_bosskey_tokens', 'ganon_bosskey_hearts']},
-            # False: {'settings': ['triforce_count_per_world', 'triforce_goal_per_world']},
+            False: {'settings': ['triforce_count_per_world', 'triforce_goal_per_world']},
         },
     )
 
@@ -742,18 +742,6 @@ class SettingInfos:
             'web:max':            200,
             'electron:max':       200,
         },
-        conditional_visibility = {
-             # Single condition, name is for reading purposes only
-            "TCPW_ganon_boss_key_on_triforce_pieces_AND_triforce_hunt_disabled": [ # FIXME: EXAMPLE ONLY - REMOVE/UPDATE
-                # First partial condition that must be met for the whole condition to be true
-                {"shuffle_ganon_bosskey": "triforces"}, # List of setting/value pairs, of which at least ONE of which must be true (OR logic). key = setting name, value = setting value
-                # Second partial condition that must also be met for the whole condition to be true (AND logic)
-                {"triforce_hunt": False},
-            ],
-            "TCPW_triforce_hunt_enabled": [
-                {"triforce_hunt": True},
-            ],
-        },
     )
 
     triforce_goal_per_world = Scale(
@@ -773,18 +761,6 @@ class SettingInfos:
             "hide_when_disabled": True,
             'web:max':            100,
             'electron:max':       100,
-        },
-        conditional_visibility = {
-             # Single condition, name is for reading purposes only
-            "TGPW_ganon_boss_key_on_triforce_pieces_AND_triforce_hunt_disabled": [ # FIXME: EXAMPLE ONLY - REMOVE/UPDATE
-                # First setting value that must be set for this condition to be met
-                {"shuffle_ganon_bosskey": "triforces"}, # List of setting/value pairs, of which at least ONE of which must be true (OR logic). key = setting name, value = setting value
-                # Second setting that must also be true for this to pass (AND logic)
-                {"triforce_hunt": False},
-            ],
-            "TGPW_triforce_hunt_enabled": [
-                {"triforce_hunt": True},
-            ],
         },
     )
 
@@ -1093,7 +1069,6 @@ class SettingInfos:
             'dungeons':        "Dungeon Rewards",
             'tokens':          "Tokens",
             'hearts':          "Hearts",
-            'triforces':       "Triforce Pieces",
         },
         gui_tooltip      = '''\
             'Remove': Ganon's Castle Boss Key is removed
@@ -1135,8 +1110,6 @@ class SettingInfos:
 
             'Hearts': Ganon's Castle Boss Key will be awarded
             when reaching the target number of hearts.
-
-            TODO: Add tooltip for triforce pieces
         ''',
         shared           = True,
         disable          = {
@@ -1145,7 +1118,6 @@ class SettingInfos:
             '!dungeons':    {'settings': ['ganon_bosskey_rewards']},
             '!tokens':      {'settings': ['ganon_bosskey_tokens']},
             '!hearts':      {'settings': ['ganon_bosskey_hearts']},
-            # 'triforces':    {'settings': ['ganon_bosskey_stones', 'ganon_bosskey_medallions','ganon_bosskey_rewards','ganon_bosskey_tokens','ganon_bosskey_hearts']},
         },
         gui_params       = {
             'randomize_key': 'randomize_settings',
