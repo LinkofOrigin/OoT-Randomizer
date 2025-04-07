@@ -88,7 +88,7 @@ def get_setting_json(setting: str, web_version: bool, as_array: bool = False) ->
     setting_disable = {}
     if setting_info.disable is not None:
         setting_disable = copy.deepcopy(setting_info.disable)
-    
+
     # If this setting can be conditionally enabled, we will need to revisit it once the full JSON has been built
     if setting_info.conditional_visibility is not None:
         mark_conditional_visibility_option_for_setting(setting_info.name, setting_info.conditional_visibility)
@@ -301,7 +301,7 @@ def resolve_conditional_visibility_dependencies(output_json: dict) -> None:
                                 setting_obj_option_json['conditionally_controls_setting'] = dependent_setting_name
                             elif dependent_setting_name not in setting_obj_option_json['conditionally_controls_setting']:
                                 setting_obj_option_json['conditionally_controls_setting'] += ',' + dependent_setting_name
-                    
+
                     # Handle the setting in the "array" portion of the json
                     setting_array_json = find_setting_array_json_in_output(setting_name, output_json)
                     if setting_array_json is not None:

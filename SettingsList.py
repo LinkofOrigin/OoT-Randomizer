@@ -1135,7 +1135,7 @@ class SettingInfos:
 
             'Hearts': Ganon's Castle Boss Key will be awarded
             when reaching the target number of hearts.
-            
+
             TODO: Add tooltip for triforce pieces
         ''',
         shared           = True,
