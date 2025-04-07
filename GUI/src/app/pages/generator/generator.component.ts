@@ -1309,8 +1309,8 @@ export class GeneratorComponent implements OnInit {
         if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
           triggeredChange = true;
 
-      // targetValue = false => This setting will be enabled.
-      // targetValue = true  => This setting will be disabled.
+      // targetValue = true => This setting will be enabled.
+      // targetValue = false  => This setting will be disabled.
         this.global.generator_settingsVisibilityMap[setting] = targetValue;
       });
 
