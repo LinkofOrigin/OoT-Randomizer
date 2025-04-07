@@ -753,7 +753,7 @@ export class GeneratorComponent implements OnInit {
       return;
 
     //Check setting is enabled first
-    if (!this.global.generator_settingsVisibilityMap[setting.name])
+    if (!this.settingIsEnabled(setting.name))
       return;
 
     event.dataTransfer.dropEffect = 'link'; //Change cursor to link icon when in input area
@@ -771,7 +771,7 @@ export class GeneratorComponent implements OnInit {
       return;
 
     //Check setting is enabled first
-    if (!this.global.generator_settingsVisibilityMap[setting.name])
+    if (!this.settingIsEnabled(setting.name))
       return;
 
     let items = event.dataTransfer.items;
@@ -1075,13 +1075,21 @@ export class GeneratorComponent implements OnInit {
     return typeof (variable);
   }
 
+  settingIsEnabled(setting_name: string) {
+    return this.global.generator_settingsVisibilityMap[setting_name];
+  }
+
+  settingIsFullyHidden(setting: any) {
+    return !this.settingIsEnabled(setting.name) && setting.hide_when_disabled;
+  }
+
   getNextVisibleSetting(settings: any, startingIndex: number) {
 
     if (settings.length > startingIndex) {
       for (let i = startingIndex; i < settings.length; i++) {
         let setting = settings[i];
 
-        if (this.global.generator_settingsVisibilityMap[setting.name] || !setting.hide_when_disabled)
+        if (!this.settingIsFullyHidden(setting))
           return setting;
       }
     }
@@ -1248,11 +1256,11 @@ export class GeneratorComponent implements OnInit {
             let enabledChildren = false;
 
             //If a setting gets disabled, re-enable all the settings that this setting caused to deactivate. The later full check will fix any potential issues
-            if (targetValue == false && this.global.generator_settingsVisibilityMap[setting.name] == true) {
+            if (targetValue == false && this.settingIsEnabled(setting.name) == true) {
               enabledChildren = this.clearDeactivationsOfSetting(setting);
             }
 
-            if ((targetValue == true && this.global.generator_settingsVisibilityMap[setting.name] == false) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
+            if ((targetValue == true && this.settingIsEnabled(setting.name) == false) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
               triggeredChange = true;
 
             this.global.generator_settingsVisibilityMap[setting.name] = targetValue;
@@ -1274,7 +1282,7 @@ export class GeneratorComponent implements OnInit {
           if (dependentSettingConditionalEnables != null) {
             let conditionsMetToEnable = this.conditionsMetToEnable(dependentSettingConditionalEnables);
             
-            if (conditionsMetToEnable != this.global.generator_settingsVisibilityMap[dependentSetting.name]) {
+            if (conditionsMetToEnable != this.settingIsEnabled(dependentSetting.name)) {
               this.global.generator_settingsVisibilityMap[dependentSetting.name] = conditionsMetToEnable;
               triggeredChange = true;
             }
@@ -1292,13 +1300,13 @@ export class GeneratorComponent implements OnInit {
         let enabledChildren = false;
 
         // If the setting can be enabled but its currently disabled, attempt to re-enable it.
-        if (targetValue == false && this.global.generator_settingsVisibilityMap[setting] == true) {
+        if (targetValue == false && this.settingIsEnabled(setting)) {
           enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
         }
 
         // If the setting will be disabled but it is currently enabled, note a change is occurring.
         // Alternatively, if we enabled it earlier, note a change is occurring.
-        if ((targetValue == true && this.global.generator_settingsVisibilityMap[setting] == false) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
+        if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
           triggeredChange = true;
 
       // targetValue = false => This setting will be enabled.
@@ -1374,7 +1382,7 @@ export class GeneratorComponent implements OnInit {
 
     this.global.getGlobalVar('generatorSettingsArray').forEach(tab => tab.sections.forEach(section => section.settings.forEach(checkSetting => {
 
-      if (skipSetting && checkSetting.name === skipSetting || !this.global.generator_settingsVisibilityMap[checkSetting.name]) //Disabled settings can not alter visibility anymore
+      if (skipSetting && checkSetting.name === skipSetting || !this.settingIsEnabled(checkSetting.name)) //Disabled settings can not alter visibility anymore
         return;
 
       if (checkSetting["type"] === "Checkbutton" || checkSetting["type"] === "Radiobutton" || checkSetting["type"] === "Combobox" || checkSetting["type"] === "SearchBox") {
