@@ -1271,6 +1271,11 @@ export class GeneratorComponent implements OnInit {
       return triggeredChange;
     }
 
+  // targetSetting   = The current option of the setting to process.
+  // targetValue     = 'true' if the settings this option controls should be enabled, 'false' if they should be disabled.
+  //                   (Note: This is passed in 'checkVisibility' as "option != value", in other words: "This option is NOT the option the setting is being changed to".)
+  // triggeredChange = Set to 'true' to force this function to return 'true', suggesting a change occurred regardless of how things processed.
+  //                   Otherwise, the function will return 'true' if a dependent setting's state was altered, otherwise it will return 'false'.
   private triggerSettingVisibility(targetSetting: any, targetValue: boolean, triggeredChange: boolean) {
       // Resolve logic that could conditionally enable this setting.
       // ORDER MATTERS! Logic that could disable settings is below this, which gives that priority (and is what we want).
@@ -1290,7 +1295,8 @@ export class GeneratorComponent implements OnInit {
         });
       }
     
-      // This list of settings could be disabled entirely (Legacy)
+      // NOTE: We are treating any setting under "controls_visibility_setting" as one
+      //       that should be disabled by the current option. Could be worth renaming...
       targetSetting["controls_visibility_setting"].split(",").forEach(setting => {
 
         //Ignore settings that don't exist in this specific app
@@ -1299,13 +1305,17 @@ export class GeneratorComponent implements OnInit {
 
         let enabledChildren = false;
 
-        // If the setting can be enabled but its currently disabled, attempt to re-enable it.
+        // We are about to disable this setting.
+        // If this is currently enabled, attempt to re-enabled any settings that it
+        // may be disabling on its own. If it's disabled, it shouldn't also disable other settings.
         if (targetValue == false && this.settingIsEnabled(setting)) {
           enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
         }
 
-        // If the setting will be disabled but it is currently enabled, note a change is occurring.
-        // Alternatively, if we enabled it earlier, note a change is occurring.
+        // We are about to enable this setting.
+        // If this setting is currently disabled, note that we are causing a change.
+        // Alternatively, if disabling this setting causes any other settings to be
+        // enabled due to it being disabled, then also note that we are causing a change
         if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
           triggeredChange = true;
 
