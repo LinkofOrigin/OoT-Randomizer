@@ -1283,7 +1283,7 @@ export class GeneratorComponent implements OnInit {
       targetSetting["conditionally_controls_setting"].split(",").forEach(setting => {
 
         let dependentSetting = this.global.findSettingByName(setting);
-        if (dependentSetting.conditional_visibility != null) {
+        if (dependentSetting.conditional_controls != null) {
           let targetSettingState = this.getTargetSettingStateFromConditions(dependentSetting);
           let currentSettingState = { // basically doing this twice (once here, once in fn call above), could be cleaner...
             "value": this.global.generator_settingsMap[dependentSetting.name],
@@ -1359,7 +1359,7 @@ export class GeneratorComponent implements OnInit {
 
     // There may be multiple combinations of conditions that may alter this setting.
     // We'll check each one, and if one of them passes we'll use that to determine the setting's state.
-    let settingConditions = setting.conditional_visibility;
+    let settingConditions = setting.conditional_controls;
     for (let conditionName in settingConditions) {
       var conditionToTest = settingConditions[conditionName];
       let conditionList = conditionToTest['conditions'];

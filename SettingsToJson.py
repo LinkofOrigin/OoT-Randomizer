@@ -15,7 +15,7 @@ section_keys: list[str] = ['text', 'app_type', 'is_colors', 'is_sfx', 'col_span'
 setting_keys: list[str] = ['hide_when_disabled', 'min', 'max', 'size', 'max_length', 'file_types', 'no_line_break', 'function', 'option_remove', 'dynamic']
 types_with_options: list[str] = ['Checkbutton', 'Radiobutton', 'Combobox', 'SearchBox', 'MultipleSelect']
 
-conditional_visibility_dependencies: dict[str, dict] = {}
+conditional_control_dependencies: dict[str, dict] = {}
 
 def remove_trailing_lines(text: str) -> str:
     while text.endswith('<br>'):
@@ -54,9 +54,9 @@ def add_disable_option_to_json(disable_option: dict[str, Any], option_json: dict
             option_json['controls_visibility_tab'] += ',' + ','.join(disable_option['tabs'])
 
 
-def mark_conditional_visibility_option_for_setting(setting_name: str, conditional_settings: dict[str, Any]) -> None:
-    if setting_name not in conditional_visibility_dependencies:
-        conditional_visibility_dependencies[setting_name] = conditional_settings
+def mark_conditional_control_option_for_setting(setting_name: str, conditional_settings: dict[str, Any]) -> None:
+    if setting_name not in conditional_control_dependencies:
+        conditional_control_dependencies[setting_name] = conditional_settings
 
 
 def get_setting_json(setting: str, web_version: bool, as_array: bool = False) -> Optional[dict[str, Any]]:
@@ -90,9 +90,9 @@ def get_setting_json(setting: str, web_version: bool, as_array: bool = False) ->
         setting_disable = copy.deepcopy(setting_info.disable)
 
     # If this setting can be conditionally enabled, we will need to revisit it once the full JSON has been built
-    if setting_info.conditional_visibility is not None:
-        mark_conditional_visibility_option_for_setting(setting_info.name, setting_info.conditional_visibility)
-        setting_json['conditional_visibility'] = setting_info.conditional_visibility
+    if setting_info.conditional_controls is not None:
+        mark_conditional_control_option_for_setting(setting_info.name, setting_info.conditional_controls)
+        setting_json['conditional_controls'] = setting_info.conditional_controls
 
     version_specific_keys = []
 
@@ -272,7 +272,7 @@ def create_settings_list_json(path: str, web_version: bool = False) -> None:
             output_json['cosmeticsArray'].append(tab_json_array)
 
     # Resolve conditional visibility settings now that the full json is available
-    resolve_conditional_visibility_dependencies(output_json)
+    resolve_conditional_control_dependencies(output_json)
 
     for d in hint_dist_files():
         with open(d, 'r') as dist_file:
@@ -287,8 +287,8 @@ def create_settings_list_json(path: str, web_version: bool = False) -> None:
         json.dump(output_json, f)
 
 
-def resolve_conditional_visibility_dependencies(output_json: dict) -> None:
-    for dependent_setting_name, dependent_conditions in conditional_visibility_dependencies.items():
+def resolve_conditional_control_dependencies(output_json: dict) -> None:
+    for dependent_setting_name, dependent_conditions in conditional_control_dependencies.items():
         for condition_name, condition_details in dependent_conditions.items():
             for conditional_settings in condition_details['conditions']:
                 for setting_name, setting_value in conditional_settings.items():
