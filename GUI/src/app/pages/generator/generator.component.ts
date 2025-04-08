@@ -1336,7 +1336,7 @@ export class GeneratorComponent implements OnInit {
     
     // If a setting won't be forcibly disabled, allow conditions to update the setting
     for (let settingName in conditionalSettingUpdates) {
-      if (settingsDisabled[settingName] == null) {
+      if (!settingsDisabled.includes(settingName)) {
         console.log(settingName + " is being updated by conditions! New state = " + JSON.stringify(conditionalSettingUpdates[settingName]));
         this.global.generator_settingsMap[settingName] = conditionalSettingUpdates[settingName]['value'];
         this.global.generator_settingsVisibilityMap[settingName] = conditionalSettingUpdates[settingName]['enabled'];
