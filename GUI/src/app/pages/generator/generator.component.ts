@@ -1190,7 +1190,7 @@ export class GeneratorComponent implements OnInit {
       this.triggerTabVisibility(targetSetting, targetValue);
     }
 
-    if ("controls_visibility_setting" in targetSetting) {
+    if ("controls_visibility_setting" in targetSetting || 'conditionally_controls_setting' in targetSetting) {
       triggeredChange = this.triggerSettingVisibility(targetSetting, targetValue, triggeredChange);
     }
 
@@ -1277,62 +1277,92 @@ export class GeneratorComponent implements OnInit {
   // triggeredChange = Set to 'true' to force this function to return 'true', suggesting a change occurred regardless of how things processed.
   //                   Otherwise, the function will return 'true' if a dependent setting's state was altered, otherwise it will return 'false'.
   private triggerSettingVisibility(targetSetting: any, targetValue: boolean, triggeredChange: boolean) {
-      // Resolve logic that could conditionally enable this setting.
-      // ORDER MATTERS! Logic that could disable settings is below this, which gives that priority (and is what we want).
-      if (targetSetting["conditionally_controls_setting"] != null) {
-        targetSetting["conditionally_controls_setting"].split(",").forEach(setting => {
+    // Resolve logic that could conditionally update this setting.
+    let conditionalSettingUpdates = {};
+    if (targetSetting["conditionally_controls_setting"] != null) {
+      targetSetting["conditionally_controls_setting"].split(",").forEach(setting => {
 
-          let dependentSetting = this.global.findSettingByName(setting);
-          let dependentSettingConditionalEnables = dependentSetting.conditional_visibility;
-          if (dependentSettingConditionalEnables != null) {
-            let conditionsMetToEnable = this.conditionsMetToEnable(dependentSettingConditionalEnables);
-            
-            if (conditionsMetToEnable != this.settingIsEnabled(dependentSetting.name)) {
-              this.global.generator_settingsVisibilityMap[dependentSetting.name] = conditionsMetToEnable;
-              triggeredChange = true;
-            }
+        let dependentSetting = this.global.findSettingByName(setting);
+        if (dependentSetting.conditional_visibility != null) {
+          let targetSettingState = this.getTargetSettingStateFromConditions(dependentSetting);
+          let currentSettingState = { // basically doing this twice (once here, once in fn call above), could be cleaner...
+            "value": this.global.generator_settingsMap[dependentSetting.name],
+            "visible": !this.settingIsFullyHidden(dependentSetting),
+            "enabled": this.settingIsEnabled(dependentSetting.name),
+          };
+          
+          // If any part of the setting would change, save the new setting state for later
+          if (currentSettingState['value'] != targetSettingState['value'] ||
+              currentSettingState['visible'] != targetSettingState['visible'] ||
+              currentSettingState['enabled'] != targetSettingState['enabled']
+          ) {
+            console.log(dependentSetting.name + " setting would be updated by conditions!");
+            conditionalSettingUpdates[dependentSetting.name] = targetSettingState;
           }
-        });
-      }
-    
-      // NOTE: We are treating any setting under "controls_visibility_setting" as one
-      //       that should be disabled by the current option. Could be worth renaming...
-      targetSetting["controls_visibility_setting"].split(",").forEach(setting => {
-
-        //Ignore settings that don't exist in this specific app
-        if (!(setting in this.global.generator_settingsVisibilityMap))
-          return;
-
-        let enabledChildren = false;
-
-        // We are about to disable this setting.
-        // If this is currently enabled, attempt to re-enabled any settings that it
-        // may be disabling on its own. If it's disabled, it shouldn't also disable other settings.
-        if (targetValue == false && this.settingIsEnabled(setting)) {
-          enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
         }
+      });
+    }
+  
+    // NOTE: We are treating any setting under "controls_visibility_setting" as one
+    //       that should be disabled by the current option. Could be worth renaming...
+    let settingsDisabled = []; // Setting names in here are being disabled and take priority over any changes made by conditional logic
+    targetSetting["controls_visibility_setting"].split(",").forEach(setting => {
 
-        // We are about to enable this setting.
-        // If this setting is currently disabled, note that we are causing a change.
-        // Alternatively, if disabling this setting causes any other settings to be
-        // enabled due to it being disabled, then also note that we are causing a change
-        if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
-          triggeredChange = true;
+      //Ignore settings that don't exist in this specific app
+      if (!(setting in this.global.generator_settingsVisibilityMap))
+        return;
+
+      let enabledChildren = false;
+
+      // We are about to disable this setting.
+      // If this is currently enabled, attempt to re-enabled any settings that it
+      // may be disabling on its own. If it's disabled, it shouldn't also disable other settings.
+      if (targetValue == false && this.settingIsEnabled(setting)) {
+        enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
+        settingsDisabled.push(setting);
+      }
+
+      // We are about to enable this setting.
+      // If this setting is currently disabled, note that we are triggering a change.
+      // Alternatively, if disabling this setting causes any other settings to be
+      // enabled due to it being disabled, then also note that we are triggering a change.
+      if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
+        triggeredChange = true;
 
       // targetValue = true => This setting will be enabled.
       // targetValue = false  => This setting will be disabled.
-        this.global.generator_settingsVisibilityMap[setting] = targetValue;
-      });
+      this.global.generator_settingsVisibilityMap[setting] = targetValue;
+    });
+    
+    // If a setting won't be forcibly disabled, allow conditions to update the setting
+    for (let settingName in conditionalSettingUpdates) {
+      if (settingsDisabled[settingName] == null) {
+        console.log(settingName + " is being updated by conditions! New state = " + JSON.stringify(conditionalSettingUpdates[settingName]));
+        this.global.generator_settingsMap[settingName] = conditionalSettingUpdates[settingName]['value'];
+        this.global.generator_settingsVisibilityMap[settingName] = conditionalSettingUpdates[settingName]['enabled'];
+        // TODO: Revisit for "visibility" when/if the "visibility" and "enabled" logic are more decoupled and we have more direct control
+        triggeredChange = true;
+      }
+    }
 
     return triggeredChange;
   }
 
-  private conditionsMetToEnable(settingConditions: any) {
-    let shouldEnable = false;
-    // There may be multiple combinations of conditions that may enable this setting.
-    // We'll check each one, and if one of them passes we'll enable the setting
+  private getTargetSettingStateFromConditions(setting: any) {
+    // Start with the current state as the target
+    // If no conditions change the target state, then we effectively just return the current state
+    let targetSettingState = {
+      "value": this.global.generator_settingsMap[setting.name],
+      "visible": !this.settingIsFullyHidden(setting),
+      "enabled": this.settingIsEnabled(setting.name),
+    };
+
+    // There may be multiple combinations of conditions that may alter this setting.
+    // We'll check each one, and if one of them passes we'll use that to determine the setting's state.
+    let settingConditions = setting.conditional_visibility;
     for (let conditionName in settingConditions) {
-      let conditionList = settingConditions[conditionName];
+      var conditionToTest = settingConditions[conditionName];
+      let conditionList = conditionToTest['conditions'];
       let conditionsPassed = [];
       for (let i = 0; i < conditionList.length; i++) {
         let condition = conditionList[i];
@@ -1349,13 +1379,22 @@ export class GeneratorComponent implements OnInit {
         conditionsPassed.push(partialConditionPassed);
       };
 
-      // If one full condition passed, we'll enable the setting
+      // If one full condition passed, we'll use that condition's target state
       if (!conditionsPassed.includes(false)) {
-        shouldEnable = true; // Could early exit after this, but letting it process all conditions for debugging purposes
+        console.log(setting.name + " had at least one condition pass!");
+        // TODO: Define priority rules so we know what should take precedent.
+        //       - Option 1: First that passes has priority => just early exit
+        //       - Option 2: Last that passes has priority => could result in mixed data sets if "condition1" sets some of the state and later "condition 3" sets other parts
+        //       - Option 3: Manually define priority inside the blob => basically option 1 with extra logic. But what if two options have the same priority? First or last wins?
+        // If the condition sets one of these keys, we'll use that value. Otherwise use the current value.
+        targetSettingState['value'] = conditionToTest['value'] != null ? conditionToTest['value'] : targetSettingState['value'];
+        targetSettingState['visible'] = conditionToTest['visible'] != null ? conditionToTest['visible'] : targetSettingState['visible'];
+        targetSettingState['enabled'] = conditionToTest['enabled'] != null ? conditionToTest['enabled'] : targetSettingState['enabled'];
+        break; // First condition that passes wins and takes priority
       }
     }
 
-    return shouldEnable;
+    return targetSettingState;
   }
 
   clearDeactivationsOfSetting(setting: any) {

@@ -289,8 +289,8 @@ def create_settings_list_json(path: str, web_version: bool = False) -> None:
 
 def resolve_conditional_visibility_dependencies(output_json: dict) -> None:
     for dependent_setting_name, dependent_conditions in conditional_visibility_dependencies.items():
-        for condition_name, conditions in dependent_conditions.items():
-            for conditional_settings in conditions:
+        for condition_name, condition_details in dependent_conditions.items():
+            for conditional_settings in condition_details['conditions']:
                 for setting_name, setting_value in conditional_settings.items():
                     # Handle the setting in the "object" portion of the json
                     setting_obj_json = find_setting_obj_json_in_output(setting_name, output_json)
