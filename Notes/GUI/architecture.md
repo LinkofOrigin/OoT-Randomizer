@@ -81,7 +81,7 @@ The settings array follows that defines the settings that should appear in this 
 * controls-visibility-tab &rarr; What tab(s) to disable when this setting is enabled, used for Checkbuttons. Multiple tabs can be separated by comma and are addressed by their internal name
 * controls-visibility-section &rarr; What section(s) to disable when this setting is enabled
 * controls-visibility-setting &rarr; What specific setting(s) to disable when this setting is enabled
-* conditional-visibility &rarr; List of setting/value pairs this setting may be dependent on to determine what its current state should be (eg. disabled, specific value, etc.)
+* conditional-controls &rarr; List of setting/value pairs this setting may be dependent on to determine what its current state should be (eg. disabled, specific value, etc.)
 * hide-when-disabled &rarr; If this setting should be completely hidden when it gets disabled, not just greyed out. Used on the website to make the difference between generator and patcher more distinct
 * min &rarr; The minimum numeric value allowed. Used for Scales and Numberinputs
 * max &rarr; The maximum numeric value allowed. Used for Scales and Numberinputs. Can differ between Electron and website (e.g. multi world limit)
