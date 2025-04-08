@@ -469,6 +469,7 @@ export class GUIGlobal implements OnDestroy {
 
   async parseGeneratorGUISettings(guiSettings, userSettings) {
     const isRGBHex = /[0-9A-Fa-f]{6}/;
+    globalThis.Settings = {};
 
     //Intialize settings maps
     for (let tabIndex = 0; tabIndex < guiSettings.settingsArray.length; tabIndex++) {
@@ -527,6 +528,20 @@ export class GUIGlobal implements OnDestroy {
           let setting = section.settings[settingIndex];
 
           this.generator_settingsVisibilityMap[setting.name] = true;
+
+          // Bind a property as a function that returns an object representing this setting for easy debugging
+          // By using the setting name as the property name, it allows for auto-complete and fuzzy searching/suggestions
+          // This works by binding a property to a getter function that has the current 'this' value bound to the function context
+          Object.defineProperty(globalThis.Settings, setting.name, {
+            get: () => {
+              return {
+                // Object representing the current state of this setting. Add more values as you see fit.
+                enabled: this.generator_settingsVisibilityMap[setting.name],
+                value: this.generator_settingsMap[setting.name],
+                _json: this.findSettingByName(setting.name),
+              }; 
+            },
+          });
 
           if (setting.type == "SearchBox" && userSettings && setting.name in userSettings) { //Special parsing for SearchBox data
 
