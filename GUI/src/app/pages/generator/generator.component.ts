@@ -1322,10 +1322,9 @@ export class GeneratorComponent implements OnInit {
     // If a setting won't be forcibly disabled, allow conditions to update the setting
     for (let settingName in conditionalSettingUpdates) {
       if (!settingsDisabled.includes(settingName)) {
-        console.log(settingName + " is being updated by conditions! New state = " + JSON.stringify(conditionalSettingUpdates[settingName]));
         this.global.generator_settingsMap[settingName] = conditionalSettingUpdates[settingName]['value'];
         this.global.generator_settingsVisibilityMap[settingName] = conditionalSettingUpdates[settingName]['enabled'];
-        // TODO: Revisit for "visibility" when/if the "visibility" and "enabled" logic are more decoupled and we have more direct control. (See 'settingIsEnabled' and 'settingIsFullyHidden')
+        // TODO: Revisit for 'visible' when/if the "visibility" and "enabled" logic are more decoupled and we have more direct control. (See 'settingIsEnabled' and 'settingIsFullyHidden')
         triggeredChange = true;
       }
     }
@@ -1345,10 +1344,9 @@ export class GeneratorComponent implements OnInit {
           
           // If any part of the setting would change, save the new setting state for later
           if (currentSettingState['value'] != targetSettingState['value'] ||
-              currentSettingState['visible'] != targetSettingState['visible'] ||
-              currentSettingState['enabled'] != targetSettingState['enabled']
+              currentSettingState['enabled'] != targetSettingState['enabled'] ||
+              currentSettingState['visible'] != targetSettingState['visible']
           ) {
-            console.log(dependentSetting.name + " setting would be updated by conditions!");
             conditionalSettingUpdates[dependentSetting.name] = targetSettingState;
           }
         }
@@ -1387,15 +1385,14 @@ export class GeneratorComponent implements OnInit {
 
       // If one full condition passed, we'll use that condition's target state
       if (!conditionsPassed.includes(false)) {
-        console.log(setting.name + " had at least one condition pass!");
         // TODO: Define priority rules so we know what should take precedent.
         //       - Option 1: First that passes has priority => just early exit
         //       - Option 2: Last that passes has priority => could result in mixed data sets if "condition1" sets some of the state and later "condition 3" sets other parts
         //       - Option 3: Manually define priority inside the blob => basically option 1 with extra logic. But what if two options have the same priority? First or last wins?
         // If the condition sets one of these keys, we'll use that value. Otherwise use the current value.
         targetSettingState['value'] = conditionToTest['value'] != null ? conditionToTest['value'] : targetSettingState['value'];
-        targetSettingState['visible'] = conditionToTest['visible'] != null ? conditionToTest['visible'] : targetSettingState['visible'];
         targetSettingState['enabled'] = conditionToTest['enabled'] != null ? conditionToTest['enabled'] : targetSettingState['enabled'];
+        targetSettingState['visible'] = conditionToTest['visible'] != null ? conditionToTest['visible'] : targetSettingState['visible'];
         break; // First condition that passes wins and takes priority
       }
     }
