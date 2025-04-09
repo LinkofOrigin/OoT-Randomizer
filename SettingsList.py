@@ -742,6 +742,22 @@ class SettingInfos:
             'web:max':            200,
             'electron:max':       200,
         },
+        conditional_controls = {
+            "show_for_triforce_hunt": {
+                "conditions": [
+                    {"triforce_hunt": True},
+                ],
+                "visible": True,
+                "enabled": True,
+            },
+            "disable_when_triforce_hunt_off": {
+                "conditions": [
+                    {"triforce_hunt": False},
+                ],
+                "visible": False,
+                "enabled": False,
+            },
+        }
     )
 
     triforce_goal_per_world = Scale(
@@ -1456,6 +1472,16 @@ class SettingInfos:
                 ('random', 1),
             ],
         },
+        conditional_controls = {
+            "set_start_age_to_child_for_closed_forest": {
+                "conditions": [
+                    {"open_forest": "closed"},
+                ],
+                "value": "child",
+                "visible": True,
+                "enabled": False,
+            }
+        }
     )
 
     mq_dungeons_mode = Combobox(
