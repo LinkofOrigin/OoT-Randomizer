@@ -182,7 +182,7 @@
     "big_poe_count":                           1,
     "easier_fire_arrow_entry":                 false,
     "ruto_already_f1_jabu":                    false,
-    "ocarina_songs":                           "off",
+    "ocarina_songs":                           [],
     "correct_chest_appearances":               "both",
     "minor_items_as_major_chest":              [],
     "invisible_chests":                        false,
