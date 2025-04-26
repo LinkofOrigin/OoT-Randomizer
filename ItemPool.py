@@ -759,10 +759,7 @@ def get_pool_core(world: World) -> tuple[list[str], dict[str, Item]]:
             if shuffle_item and (not world.settings.fix_broken_drops and location.vanilla_item == 'Deku Shield'):
                 # Special case for Deku Shield.
                 item = 'Nothing'
-                if world.settings.shuffle_empty_pots:
-                    shuffle_item = True
-                else:
-                    shuffle_item = False
+                shuffle_item = world.settings.shuffle_empty_pots
             elif shuffle_item and (location.vanilla_item != 'Nothing' or world.settings.shuffle_empty_pots):
                 shuffle_item = True
             else:
