@@ -91,6 +91,7 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
         ('object_gi_cbutton',     data_path('items/C_Button_Horizontal.zobj'), 0x1A9),  # C button Horizontal
         ('object_gi_cbutton',     data_path('items/C_Button_Vertical.zobj'),   0x1AA),  # C button Vertical
         ('object_gi_magic_meter', data_path('items/MagicMeter.zobj'),          0x1B4),  # Magic Scroll
+        ('object_gi_magic_meter', data_path('items/MagicMeter2.zobj'),         0x1B5),  # Magic Scroll 2
     )
 
     if world.settings.key_appearance_match_dungeon:

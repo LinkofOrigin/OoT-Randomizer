@@ -224,7 +224,7 @@ item_row_t item_table[GI_RANDO_MAX] = {
 
     [GI_DOUBLE_DEFENSE]                                         = ITEM_ROW(0x53,      GILDED_CHEST, 0x41, -1, 0x00E9, 0x0194, 0x13, no_upgrade, give_defense,      -1, -1, NULL), // Double Defense
     [GI_MAGIC_METER]                                            = ITEM_ROW(0x53,      GILDED_CHEST, 0x41, -1, 0x00E4, 0x01B4, 0xA0, no_upgrade, give_magic,        -1, -1, NULL), // Magic Meter
-    [GI_DOUBLE_MAGIC]                                           = ITEM_ROW(0x53,      GILDED_CHEST, 0x41, -1, 0x00E8, 0x01B4, 0xA0, no_upgrade, give_double_magic, -1, -1, NULL), // Double Magic
+    [GI_DOUBLE_MAGIC]                                           = ITEM_ROW(0x53,      GILDED_CHEST, 0x41, -1, 0x00E8, 0x01B5, 0xA3, no_upgrade, give_double_magic, -1, -1, NULL), // Double Magic
 
     [GI_MINUET_OF_FOREST]                                       = ITEM_ROW(0x53,      GILDED_CHEST, 0x41, -1, 0x9091, 0x0196, 0x78, no_upgrade, give_quest_item,  6, -1, NULL), // Minuet of Forest
     [GI_BOLERO_OF_FIRE]                                         = ITEM_ROW(0x53,      GILDED_CHEST, 0x41, -1, 0x9092, 0x0196, 0x79, no_upgrade, give_quest_item,  7, -1, NULL), // Bolero of Fire
