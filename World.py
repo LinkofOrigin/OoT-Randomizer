@@ -1025,7 +1025,7 @@ class World:
             # trials are reduced to one goal with six items to obtain.
             if self.settings.shuffle_ganon_tower:
                 trial_goal.items.append({'name': 'Ganons Tower Access', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trial_goal.goal_count += 1
+                trials.goal_count += 1
 
                 trials.add_goal(trial_goal)
                 self.goal_categories[trials.name] = trials
