@@ -15,7 +15,8 @@ big_poe_soul_collision:
     bne     t2, t3, @@no_collision     ; if epona is colliding, check if Link is indeed riding
     nop
 
-    lw      v0, 0x1C44(a1)             ; v0 = Player
+    lw      t2, 0x34(sp)               ; t2 = Playstate
+    lw      v0, 0x1C44(t2)             ; v0 = Player
     lw      t2, 0x066C(v0)             ; t2 = player->stateFlags1
     sll     t3, t2,  8                 ; t3 = (player->stateFlags1 & PLAYER_STATE1_23), the riding state
     bltzl   t3, @@collision
