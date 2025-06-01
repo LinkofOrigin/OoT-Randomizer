@@ -9,7 +9,7 @@ import zlib
 from collections.abc import Callable, Iterable
 from typing import Optional, Any
 
-from Cutscenes import patch_cutscenes
+from Cutscenes import patch_cutscenes, patch_wondertalk2
 from Entrance import Entrance
 from HintList import get_hint
 from Hints import GossipText, HintArea, write_gossip_stone_hints, build_altar_hints, \
@@ -90,6 +90,8 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
         ('object_gi_abutton',     data_path('items/A_Button.zobj'),            0x1A8),  # A button
         ('object_gi_cbutton',     data_path('items/C_Button_Horizontal.zobj'), 0x1A9),  # C button Horizontal
         ('object_gi_cbutton',     data_path('items/C_Button_Vertical.zobj'),   0x1AA),  # C button Vertical
+        ('object_gi_magic_meter', data_path('items/MagicMeter.zobj'),          0x1B4),  # Magic Scroll
+        ('object_gi_magic_meter', data_path('items/MagicMeter2.zobj'),         0x1B5),  # Magic Scroll 2
     )
 
     if world.settings.key_appearance_match_dungeon:
@@ -279,6 +281,8 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     # Add the extended texture data to the DMA table.
     rom.update_dmadata_record_by_key(None, extended_textures_start, end_address)
 
+    save_context = SaveContext()
+
     # Create an option so that recovery hearts no longer drop by changing the code which checks Link's health when an item is spawned.
     if world.settings.no_collectible_hearts:
         symbol = rom.sym('NO_COLLECTIBLE_HEARTS')
@@ -364,11 +368,17 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     if world.settings.world_count > 1:
         world_str = f"{world.id + 1} of {world.settings.world_count}"
     else:
-        world_str = ""
+        world_str = ''
     rom.write_bytes(rom.sym('WORLD_STRING_TXT'), make_bytes(world_str, 12))
 
     time_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M") + " UTC"
     rom.write_bytes(rom.sym('TIME_STRING_TXT'), make_bytes(time_str, 25))
+
+    if world.settings.web_id > 0:
+        web_id_str = f'{world.settings.web_id:10}'
+    else:
+        web_id_str = ''
+    rom.write_bytes(rom.sym('WEB_ID_STRING_TXT'), make_bytes(web_id_str, 12))
 
     if world.settings.show_seed_info:
         rom.write_byte(rom.sym('CFG_SHOW_SETTING_INFO'), 0x01)
@@ -445,7 +455,8 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     if world.settings.shuffle_ocarinas:
         rom.write_byte(rom.sym('OCARINAS_SHUFFLED'), 0x01)
 
-    patch_cutscenes(rom, songs_as_items)
+    patch_cutscenes(rom, songs_as_items, world.settings)
+    patch_wondertalk2(rom, world.settings)
 
     # Speed Pushing of All Pushable Objects (other than armos statues, which are handled in ASM)
     rom.write_bytes(0xDD2B86, [0x40, 0x80])  # block speed
@@ -592,9 +603,6 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     # Fix "...???" textbox outside Child Colossus Fairy to use the right flag and disappear once the wall is destroyed
     rom.write_byte(0x21A026F, 0xDD)
 
-    # Remove the "...???" textbox outside the Crater Fairy (change it to an actor that does nothing)
-    rom.write_int16s(0x225E7DC, [0x00B5, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xFFFF])
-
     # Forbid Sun's Song from a bunch of cutscenes
     Suns_scenes = [0x2016FC9, 0x2017219, 0x20173D9, 0x20174C9, 0x2017679, 0x20C1539, 0x20C15D9, 0x21A0719, 0x21A07F9, 0x2E90129, 0x2E901B9, 0x2E90249, 0x225E829, 0x225E939, 0x306D009]
     for address in Suns_scenes:
@@ -604,13 +612,6 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     rom.write_int32(0xC7B9C0, 0x00000000)
     rom.write_int32(0xC7BAEC, 0x00000000)
     rom.write_int32(0xc7BCA4, 0x00000000)
-
-    # Remove disruptive text from Gerudo Training Ground and early Shadow Temple (vanilla)
-    wonder_text = [0x27C00BC, 0x27C00CC, 0x27C00DC, 0x27C00EC, 0x27C00FC, 0x27C010C, 0x27C011C, 0x27C012C, 0x27CE080,
-                   0x27CE090, 0x2887070, 0x2887080, 0x2887090, 0x2897070, 0x28C7134, 0x28D91BC, 0x28A60F4, 0x28AE084,
-                   0x28B9174, 0x28BF168, 0x28BF178, 0x28BF188, 0x28A1144, 0x28A6104, 0x28D0094]
-    for address in wonder_text:
-        rom.write_byte(address, 0xFB)
 
     # Speed dig text for Dampe
     rom.write_bytes(0x9532F8, [0x08, 0x08, 0x08, 0x59])
@@ -765,10 +766,10 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
         rom.write_int16s(0xB6D460, [0x0030, 0x0035, 0x0036])  # Change trade items revert table to prevent all reverts
 
     if world.settings.adult_trade_shuffle or world.settings.item_pool_value in ('plentiful', 'ludicrous'):
-        rom.write_int16(rom.sym('CFG_ADULT_TRADE_SHUFFLE'), 0x0001)
+        rom.write_byte(rom.sym('CFG_ADULT_TRADE_SHUFFLE'), 0x01)
         move_fado_in_lost_woods(rom)
     if world.settings.shuffle_child_trade or world.settings.logic_rules == 'glitched':
-        rom.write_int16(rom.sym('CFG_CHILD_TRADE_SHUFFLE'), 0x0001)
+        rom.write_byte(rom.sym('CFG_CHILD_TRADE_SHUFFLE'), 0x01)
 
     if world.settings.shuffle_overworld_entrances:
         rom.write_byte(rom.sym('OVERWORLD_SHUFFLED'), 1)
@@ -794,6 +795,8 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
 
     if world.settings.shuffle_hideout_entrances:
         rom.write_byte(rom.sym('HIDEOUT_SHUFFLED'), 1)
+        if world.settings.shuffle_gerudo_fortress_heart_piece == 'remove':
+            save_context.write_permanent_flag(Scenes.GERUDO_FORTRESS, FlagType.COLLECT, 0x3, 0x02)
 
     if world.shuffle_dungeon_entrances:
         rom.write_byte(rom.sym('DUNGEONS_SHUFFLED'), 1)
@@ -840,8 +843,6 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
 
     rom.write_bytes(rom.sym('CFG_FILE_SELECT_HASH'), spoiler.file_hash)
     rom.write_bytes(rom.sym('PASSWORD'), spoiler.password)
-
-    save_context = SaveContext()
 
     # Initial Save Data
     if not world.settings.useful_cutscenes and 'Forest Temple' not in world.settings.dungeon_shortcuts:
@@ -1017,18 +1018,6 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     elif world.settings.open_kakariko != 'closed':
         rom.write_byte(rom.sym('OPEN_KAKARIKO'), 1)
 
-    # Mark starting trade items as owned
-    # The effective starting item seen in the player inventory will be the
-    # latest shuffled item in the trade sequence, calculated in
-    # Plandomizer.WorldDistribution.configure_effective_starting_items.
-    owned_flags = 0
-    for item_name in world.distribution.starting_items.keys():
-        if item_name in child_trade_items:
-            owned_flags += 0x1 << (child_trade_items.index(item_name))
-        if item_name in trade_items:
-            owned_flags += 0x1 << (trade_items.index(item_name) + 11)
-    save_context.write_permanent_flags(Scenes.DEATH_MOUNTAIN_TRAIL, FlagType.UNK00, owned_flags)
-
     # Mark unreachable trade-ins as traded. Only applicable with trade quest shuffle off,
     # and only practically affects the Blue Potion purchase from Granny's Potion Shop.
     if not world.settings.adult_trade_shuffle and len(world.settings.adult_trade_start) > 0:
@@ -1068,7 +1057,7 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
         save_context.write_bits(0x0EDD, 0x01) # "Obtained Zelda's Letter"
         save_context.write_bits(0x0EDE, 0x02) # "Learned Zelda's Lullaby"
         save_context.write_bits(0x00D4 + 0x5F * 0x1C + 0x04 + 0x3, 0x10) # "Moved crates to access the courtyard"
-    if world.skip_child_zelda or "Zeldas Letter" in world.distribution.starting_items.keys():
+    if 'Zeldas Letter' in world.distribution.starting_items:
         if world.settings.open_kakariko != 'closed':
             save_context.write_bits(0x0F07, 0x40)  # "Spoke to Gate Guard About Mask Shop"
         if world.settings.complete_mask_quest:
@@ -1366,12 +1355,14 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     remove_unused_messages(messages)
     shop_items = read_shop_items(rom, shop_item_file.start + 0x1DEC)
 
+    # Less misleading dialog from Biggoron after turning in eyedrops
+    update_message_by_id(messages, 0x305C, "Brrrring me the Claim Check...\x01to rrreceive anotherrrrrr item...")
+
     # Set Big Poe count to get reward from buyer
     poe_points = world.settings.big_poe_count * 100
     rom.write_int16(0xEE69CE, poe_points)
     # update dialogue
-    new_message = "\x08Hey, young man. What's happening \x01today? If you have a \x05\x41Poe\x05\x40, I will \x01buy it.\x04\x1AIf you earn \x05\x41%d points\x05\x40, you'll\x01be a happy man! Heh heh.\x04\x08Your card now has \x05\x45\x1E\x01 \x05\x40points.\x01Come back again!\x01Heh heh heh!\x02" % poe_points
-    update_message_by_id(messages, 0x70F5, new_message)
+    # 0x70F5 is done in build_misc_location_hints
     if world.settings.big_poe_count != 10:
         new_message = "\x1AOh, you brought a Poe today!\x04\x1AHmmmm!\x04\x1AVery interesting!\x01This is a \x05\x41Big Poe\x05\x40!\x04\x1AI'll buy it for \x05\x4150 Rupees\x05\x40.\x04On top of that, I'll put \x05\x41100\x01points \x05\x40on your card.\x04\x1AIf you earn \x05\x41%d points\x05\x40, you'll\x01be a happy man! Heh heh." % poe_points
         update_message_by_id(messages, 0x70f7, new_message)
@@ -1849,6 +1840,9 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
         update_message_by_id(messages, 0x6E, "Wait, that room was off limits!\x02")
         update_message_by_id(messages, 0x704C, "I hope you like it!\x02")
 
+    if world.settings.tcg_requires_lens:
+        rom.write_byte(rom.sym('TCG_REQUIRES_LENS'), 0x01)
+
     if world.settings.shuffle_pots != 'off': # Update the first BK door in ganon's castle to use a separate flag so it can be unlocked to get to the pots
         patch_ganons_tower_bk_door(rom, 0x15) # Using flag 0x15 for the door. GBK doors normally use 0x14.
     locked_doors = get_doors_to_unlock(rom, world)
@@ -2004,10 +1998,13 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
                     update_message_by_id(messages, map_id, map_message, allow_duplicates=True)
             else:
                 dungeon_name, compass_id, map_id = dungeon_list[dungeon.name]
-                if world.mixed_pools_bosses or world.settings.shuffle_dungeon_rewards not in ('vanilla', 'reward'):
+                if world.entrance_rando_reward_hints:
                     vanilla_reward = world.get_location(dungeon.vanilla_boss_name).vanilla_item
                     vanilla_reward_location = world.hinted_dungeon_reward_locations[vanilla_reward]
-                    area = HintArea.at(vanilla_reward_location)
+                    if vanilla_reward_location is None:
+                        area = HintArea.ROOT
+                    else:
+                        area = HintArea.at(vanilla_reward_location)
                     area = GossipText(area.text(world.settings.clearer_hints, preposition=True, use_2nd_person=True), [area.color], prefix='', capitalize=False)
                     compass_message = f"\x13\x75\x08You found the \x05\x41Compass\x05\x40\x01for {dungeon_name}\x05\x40!\x01The {vanilla_reward} can be found\x01{area}!\x09"
                 else:
@@ -2138,8 +2135,8 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
         rom.write_byte(symbol, 0x01)
 
         # Autocollect incoming_item_id for magic jars are swapped in vanilla code
-        rom.write_int16(0xA88066, 0x0044)  # Change GI_MAGIC_SMALL to GI_MAGIC_LARGE
-        rom.write_int16(0xA88072, 0x0043)  # Change GI_MAGIC_LARGE to GI_MAGIC_SMALL
+        rom.write_int16(0xA88066, 0x0044)  # Change GI_MAGIC_JAR_SMALL to GI_MAGIC_JAR_LARGE
+        rom.write_int16(0xA88072, 0x0043)  # Change GI_MAGIC_JAR_LARGE to GI_MAGIC_JAR_SMALL
     else:
         # Remove deku shield drop from spirit pot because it's "vanilla behavior"
         # Replace actor parameters in scene 06, room 27 actor list
@@ -2217,6 +2214,11 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
     # Meg respawns after 30 frames instead of 100 frames after getting hit
     rom.write_byte(0xCDA723, 0x1E)
 
+    # Boss doors side range (1.0 value is 0x46)
+    # This was reduced to 0x32 in 1.1, either to fix the Phantom Ganon door bug or just to match better visually the door textures.
+    # See https://github.com/OoTRandomizer/OoT-Randomizer/pull/2331 for more information.
+    rom.write_byte(0xC57AE2, 0x32)
+
     # actually write the save table to rom
     world.distribution.give_items(world, save_context)
     if world.settings.starting_age == 'adult':
@@ -2243,6 +2245,15 @@ def patch_rom(spoiler: Spoiler, world: World, rom: Rom) -> Rom:
             rom.write_byte(0x33A60BF, 0x80)
             rom.write_byte(0x33A60CF, 0x80)
 
+    # Unpatch TCG Hacks
+    if world.settings.shuffle_tcgkeys == 'vanilla':
+        rom.revert_patch("TCG_SHUFFLE_PATCH_1")
+        rom.revert_patch("TCG_SHUFFLE_PATCH_2")
+        rom.revert_patch("TCG_SHUFFLE_PATCH_3")
+        rom.revert_patch("TCG_SHUFFLE_PATCH_4")
+        rom.revert_patch("TCG_SHUFFLE_PATCH_5")
+        rom.revert_patch("TCG_SHUFFLE_PATCH_6")
+        rom.revert_patch("TCG_SHUFFLE_PATCH_7")
 
     # Write numeric seed truncated to 32 bits for rng seeding
     # Overwritten with new seed every time a new rng value is generated
@@ -2783,22 +2794,25 @@ def configure_dungeon_info(rom: Rom, world: World) -> None:
     if world.dungeon_rewards_hinted:
         for reward in REWARD_COLORS:
             location = world.hinted_dungeon_reward_locations[reward]
-            area = HintArea.at(location)
+            if location is None:
+                area = HintArea.ROOT
+            else:
+                area = HintArea.at(location)
             dungeon_reward_areas += area.short_name.encode('ascii').ljust(0x16) + b'\0'
-            dungeon_reward_worlds.append(location.world.id + 1)
-            if location.world.id == world.id and area.is_dungeon:
+            dungeon_reward_worlds.append((world.id if location is None else location.world.id) + 1)
+            if location is not None and location.world.id == world.id and area.is_dungeon:
                 dungeon_rewards[codes.index(area.dungeon_name)] = boss_reward_index(location.item)
 
-    dungeon_is_mq = [1 if world.dungeon_mq.get(c) else 0 for c in codes]
-    dungeon_precompleted = [1 if world.empty_dungeons[c].empty else 0 for c in codes]
+    dungeon_is_mq = [int(world.dungeon_mq.get(c, False)) for c in codes]
+    dungeon_precompleted = [int(world.precompleted_dungeons.get(c, False)) for c in codes]
 
     rom.write_int32(rom.sym('CFG_DUNGEON_INFO_ENABLE'), 2)
     rom.write_int32(rom.sym('CFG_DUNGEON_INFO_MQ_ENABLE'), int(mq_enable))
     rom.write_int32(rom.sym('CFG_DUNGEON_INFO_MQ_NEED_MAP'), int(enhance_map_compass))
     rom.write_int32(rom.sym('CFG_DUNGEON_INFO_REWARD_ENABLE'), int('altar' in world.settings.misc_hints or enhance_map_compass))
-    rom.write_int32(rom.sym('CFG_DUNGEON_INFO_REWARD_NEED_COMPASS'), (2 if world.mixed_pools_bosses or world.settings.shuffle_dungeon_rewards not in ('vanilla', 'reward') else 1) if enhance_map_compass and world.settings.shuffle_dungeon_rewards != 'dungeon' else 0)
+    rom.write_int32(rom.sym('CFG_DUNGEON_INFO_REWARD_NEED_COMPASS'), (2 if world.entrance_rando_reward_hints else 1) if enhance_map_compass and world.settings.shuffle_dungeon_rewards != 'dungeon' else 0)
     rom.write_int32(rom.sym('CFG_DUNGEON_INFO_REWARD_NEED_ALTAR'), int(not enhance_map_compass and world.settings.shuffle_dungeon_rewards != 'dungeon'))
-    rom.write_int32(rom.sym('CFG_DUNGEON_INFO_REWARD_SUMMARY_ENABLE'), int(not world.mixed_pools_bosses and world.settings.shuffle_dungeon_rewards in ('vanilla', 'reward')))
+    rom.write_int32(rom.sym('CFG_DUNGEON_INFO_REWARD_SUMMARY_ENABLE'), int(not world.entrance_rando_reward_hints))
     rom.write_bytes(rom.sym('CFG_DUNGEON_REWARDS'), dungeon_rewards)
     rom.write_bytes(rom.sym('CFG_DUNGEON_IS_MQ'), dungeon_is_mq)
     rom.write_bytes(rom.sym('CFG_DUNGEON_REWARD_AREAS'), dungeon_reward_areas)

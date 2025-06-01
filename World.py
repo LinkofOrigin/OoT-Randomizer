@@ -14,6 +14,7 @@ from Goals import Goal, GoalCategory
 from HintList import get_required_hints, misc_item_hint_table, misc_location_hint_table
 from Hints import HintArea, hint_dist_keys, hint_dist_files
 from Item import Item, ItemFactory, ItemInfo, make_event_item
+from ItemList import REWARD_COLORS
 from ItemPool import reward_list
 from Location import Location, LocationFactory
 from LocationList import business_scrubs, location_groups, location_table
@@ -41,7 +42,12 @@ class World:
         self.shop_prices: dict[str, int] = {}
         self.scrub_prices: dict[int, int] = {}
         self.maximum_wallets: int = 0
-        self.hinted_dungeon_reward_locations: dict[str, Location] = {}
+        self.hinted_dungeon_reward_locations: dict[str, Optional[Location]] = {
+            name: None
+            for name, count in settings.starting_items.items()
+            if name in REWARD_COLORS
+            and count.count > 0
+        }
         self.misc_hint_item_locations: dict[str, Location] = {}
         self.misc_hint_location_items: dict[str, Item] = {}
         self.triforce_count: int = 0
@@ -75,6 +81,8 @@ class World:
         )
 
         self.mixed_pools_bosses = False # this setting is still in active development at https://github.com/Roman971/OoT-Randomizer
+        # in these settings, there's not necessarily one dungeon reward in each main dungeon, so compasses and the pause menu switch to a different behavior
+        self.entrance_rando_reward_hints = self.mixed_pools_bosses or self.settings.shuffle_ganon_tower or self.settings.shuffle_dungeon_rewards not in ('vanilla', 'reward')
 
         self.ensure_tod_access: bool = bool(self.shuffle_interior_entrances or settings.shuffle_overworld_entrances or settings.spawn_positions)
         self.disable_trade_revert: bool = self.shuffle_interior_entrances or settings.shuffle_overworld_entrances or settings.adult_trade_shuffle
@@ -115,33 +123,17 @@ class World:
             'Forest': False,
         }
 
-        # empty dungeons will be decided later
-        class EmptyDungeons(dict):
-            class EmptyDungeonInfo:
-                def __init__(self, boss_name: Optional[str]) -> None:
-                    self.empty: bool = False
-                    self.boss_name: Optional[str] = boss_name
-                    self.hint_name: Optional[HintArea] = None
-
-            def __init__(self):
-                super().__init__()
-                self['Deku Tree'] = self.EmptyDungeonInfo('Queen Gohma')
-                self['Dodongos Cavern'] = self.EmptyDungeonInfo('King Dodongo')
-                self['Jabu Jabus Belly'] = self.EmptyDungeonInfo('Barinade')
-                self['Forest Temple'] = self.EmptyDungeonInfo('Phantom Ganon')
-                self['Fire Temple'] = self.EmptyDungeonInfo('Volvagia')
-                self['Water Temple'] = self.EmptyDungeonInfo('Morpha')
-                self['Spirit Temple'] = self.EmptyDungeonInfo('Twinrova')
-                self['Shadow Temple'] = self.EmptyDungeonInfo('Bongo Bongo')
-
-                for area in HintArea:
-                    if area.is_dungeon and area.dungeon_name in self:
-                        self[area.dungeon_name].hint_name = area
-
-            def __missing__(self, dungeon_name: str) -> EmptyDungeonInfo:
-                return self.EmptyDungeonInfo(None)
-
-        self.empty_dungeons: dict[str, EmptyDungeons.EmptyDungeonInfo] = EmptyDungeons()
+        # precompleted dungeons will be decided later
+        self.precompleted_dungeons: dict[str, bool] = {
+            'Deku Tree': False,
+            'Dodongos Cavern': False,
+            'Jabu Jabus Belly': False,
+            'Forest Temple': False,
+            'Fire Temple': False,
+            'Water Temple': False,
+            'Spirit Temple': False,
+            'Shadow Temple': False,
+        }
 
         # dungeon forms will be decided later
         self.dungeon_mq: dict[str, bool] = {
@@ -232,12 +224,6 @@ class World:
             for i in self.hint_dist_user['remove_items']:
                 if dist in i['types']:
                     self.item_hint_type_overrides[dist].append(i['item'])
-
-        # Make empty dungeons non-hintable as barren dungeons
-        if settings.empty_dungeons_mode != 'none':
-            for info in self.empty_dungeons.values():
-                if info.empty:
-                    self.hint_type_overrides['barren'].append(str(info.hint_name))
 
         self.hint_text_overrides: dict[str, str] = {}
         for loc in self.hint_dist_user['add_locations']:
@@ -365,7 +351,7 @@ class World:
 
         new_world.skipped_trials = copy.copy(self.skipped_trials)
         new_world.dungeon_mq = copy.copy(self.dungeon_mq)
-        new_world.empty_dungeons = copy.copy(self.empty_dungeons)
+        new_world.precompleted_dungeons = copy.copy(self.precompleted_dungeons)
         new_world.shop_prices = copy.copy(self.shop_prices)
         new_world.triforce_goal = self.triforce_goal
         new_world.triforce_count = self.triforce_count
@@ -500,14 +486,14 @@ class World:
             if trial not in chosen_trials and trial not in dist_chosen:
                 self.skipped_trials[trial] = True
 
-        # Determine empty and MQ Dungeons (avoid having both empty & MQ dungeons unless necessary)
+        # Determine precompleted and MQ Dungeons (avoid having an MQ dungeon be precompleted unless necessary)
         mq_dungeon_pool = list(self.dungeon_mq)
-        empty_dungeon_pool = list(self.empty_dungeons)
-        dist_num_mq, dist_num_empty = self.distribution.configure_dungeons(self, mq_dungeon_pool, empty_dungeon_pool)
+        precompleted_dungeon_pool = list(self.precompleted_dungeons)
+        dist_num_mq, dist_num_empty = self.distribution.configure_dungeons(self, mq_dungeon_pool, precompleted_dungeon_pool)
 
         if self.settings.empty_dungeons_mode == 'specific':
             for dung in self.settings.empty_dungeons_specific:
-                self.empty_dungeons[dung].empty = True
+                self.precompleted_dungeons[dung] = True
 
         if self.settings.mq_dungeons_mode == 'specific':
             for dung in self.settings.mq_dungeons_specific:
@@ -517,20 +503,20 @@ class World:
             nb_to_pick = self.settings.empty_dungeons_count - dist_num_empty
             if nb_to_pick < 0:
                 raise RuntimeError(f"{dist_num_empty} dungeons are set to empty on world {self.id+1}, but only {self.settings.empty_dungeons_count} empty dungeons allowed")
-            if len(empty_dungeon_pool) < nb_to_pick:
-                non_empty = 8 - dist_num_empty - len(empty_dungeon_pool)
+            if len(precompleted_dungeon_pool) < nb_to_pick:
+                non_empty = 8 - dist_num_empty - len(precompleted_dungeon_pool)
                 raise RuntimeError(f"On world {self.id+1}, {dist_num_empty} dungeons are set to empty and {non_empty} to non-empty. Can't reach {self.settings.empty_dungeons_count} empty dungeons.")
 
             # Prioritize non-MQ dungeons
             non_mq, mq = [], []
-            for dung in empty_dungeon_pool:
+            for dung in precompleted_dungeon_pool:
                 (mq if self.dungeon_mq[dung] else non_mq).append(dung)
             for dung in random.sample(non_mq, min(nb_to_pick, len(non_mq))):
-                self.empty_dungeons[dung].empty = True
+                self.precompleted_dungeons[dung] = True
                 nb_to_pick -= 1
             if nb_to_pick > 0:
                 for dung in random.sample(mq, nb_to_pick):
-                    self.empty_dungeons[dung].empty = True
+                    self.precompleted_dungeons[dung] = True
 
         if self.settings.mq_dungeons_mode == 'random' and 'mq_dungeons_count' not in dist_keys:
             for dungeon in mq_dungeon_pool:
@@ -550,7 +536,7 @@ class World:
             # Prioritize non-empty dungeons
             non_empty, empty = [], []
             for dung in mq_dungeon_pool:
-                (empty if self.empty_dungeons[dung].empty else non_empty).append(dung)
+                (empty if self.precompleted_dungeons.get(dung, False) else non_empty).append(dung)
             for dung in random.sample(non_empty, min(nb_to_pick, len(non_empty))):
                 self.dungeon_mq[dung] = True
                 nb_to_pick -= 1
@@ -667,7 +653,7 @@ class World:
         item_dict = defaultdict(list)
         for item in items:
             item_dict[item.name].append(item)
-            if (self.settings.shuffle_hideoutkeys in ('fortress', 'regional') and item.type == 'HideoutSmallKey') or (self.settings.shuffle_tcgkeys == 'regional' and item.type == 'TCGSmallKey'):
+            if (self.settings.shuffle_hideoutkeys in ('fortress', 'regional') and item.type in ('HideoutSmallKey', 'HideoutSmallKeyRing')) or (self.settings.shuffle_tcgkeys == 'regional' and item.type in ('TCGSmallKey', 'TCGSmallKeyRing')):
                 item.priority = True
 
         for dungeon in self.dungeons:
@@ -772,12 +758,11 @@ class World:
             self.push_item(loc, item)
 
     def set_empty_dungeon_rewards(self, empty_rewards: list[str] = []) -> None:
-        empty_dungeon_bosses = list(map(lambda reward: self.find_items(reward)[0].name, empty_rewards))
+        empty_dungeon_bosses = list(map(lambda reward: self.find_items(reward)[0], empty_rewards))
         for boss in empty_dungeon_bosses:
-            for dungeon_item in self.empty_dungeons.items():
-                if dungeon_item[1].boss_name == boss:
-                    dungeon_item[1].empty = True
-                    self.hint_type_overrides['barren'].append(dungeon_item[1].hint_name)
+            hint_area = HintArea.at(boss)
+            if hint_area.dungeon_name in self.precompleted_dungeons: # filter out side dungeons and overworld
+                self.precompleted_dungeons[hint_area.dungeon_name] = True
 
     def set_goals(self) -> None:
         # Default goals are divided into 3 primary categories:
@@ -841,11 +826,23 @@ class World:
                     dot_items.append({'name': 'Song of Time', 'quantity': 2 if self.settings.shuffle_song_items == 'any' and self.settings.item_pool_value == 'plentiful' else 1, 'minimum': 1, 'hintable': True})
                     if self.settings.shuffle_ocarinas:
                         dot_items.append({'name': 'Ocarina', 'quantity': 3 if self.settings.item_pool_value == 'plentiful' else 2, 'minimum': 1, 'hintable': True})
+                    if self.settings.shuffle_individual_ocarina_notes:
+                        notes = str(self.song_notes['Song of Time'])
+                        if 'A' in notes:
+                            dot_items.append({'name': 'Ocarina A Button', 'quantity': 2 if self.settings.item_pool_value == 'plentiful' else 1, 'minimum': 1, 'hintable': True})
+                        if 'v' in notes:
+                            dot_items.append({'name': 'Ocarina C down Button', 'quantity': 2 if self.settings.item_pool_value == 'plentiful' else 1, 'minimum': 1, 'hintable': True})
+                        if '>' in notes:
+                            dot_items.append({'name': 'Ocarina C right Button', 'quantity': 2 if self.settings.item_pool_value == 'plentiful' else 1, 'minimum': 1, 'hintable': True})
+                        if '<' in notes:
+                            dot_items.append({'name': 'Ocarina C left Button', 'quantity': 2 if self.settings.item_pool_value == 'plentiful' else 1, 'minimum': 1, 'hintable': True})
+                        if '^' in notes:
+                            dot_items.append({'name': 'Ocarina C up Button', 'quantity': 2 if self.settings.item_pool_value == 'plentiful' else 1, 'minimum': 1, 'hintable': True})
                 dot.add_goal(Goal(self, 'Door of Time', 'path of #time#', 'Light Blue', items=dot_items))
                 self.goal_categories[dot.name] = dot
 
             # Bridge goals will always be defined as they have the most immediate priority
-            if self.settings.bridge != 'open' and not self.shuffle_special_dungeon_entrances:
+            if self.settings.bridge != 'open' and not self.shuffle_special_dungeon_entrances and not self.settings.shuffle_ganon_tower:
                 # "Replace" hint text dictionaries are used to reference the
                 # dungeon boss holding the specified reward. Only boss names/paths
                 # are defined for this feature, and it is not extendable via plando.
@@ -916,22 +913,22 @@ class World:
             # the GBK category is redundant and not used for hint selection.
             if ((self.settings.ganon_bosskey_stones > 0
                     and self.settings.shuffle_ganon_bosskey == 'stones'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_stones > self.settings.bridge_stones or self.settings.bridge != 'stones'))
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_stones > self.settings.bridge_stones or self.settings.bridge != 'stones'))
                 or (self.settings.lacs_stones > 0
                     and self.settings.shuffle_ganon_bosskey == 'on_lacs' and self.settings.lacs_condition == 'stones'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_stones > self.settings.bridge_stones or self.settings.bridge != 'stones'))
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_stones > self.settings.bridge_stones or self.settings.bridge != 'stones'))
                 or (self.settings.ganon_bosskey_rewards > 0
                     and self.settings.shuffle_ganon_bosskey == 'dungeons'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > 2 or self.settings.bridge != 'vanilla'))
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > 2 or self.settings.bridge != 'vanilla'))
                 or (self.settings.lacs_rewards > 0
                     and self.settings.shuffle_ganon_bosskey == 'on_lacs' and self.settings.lacs_condition == 'dungeons'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > 2 or self.settings.bridge != 'vanilla'))):
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > 2 or self.settings.bridge != 'vanilla'))):
                 gbk.add_goal(Goal(self, 'Kokiri Emerald', { 'replace': 'Kokiri Emerald' }, 'Green', items=[{'name': 'Kokiri Emerald', 'quantity': 1, 'minimum': 1, 'hintable': False}]))
                 gbk.add_goal(Goal(self, 'Goron Ruby', { 'replace': 'Goron Ruby' }, 'Red', items=[{'name': 'Goron Ruby', 'quantity': 1, 'minimum': 1, 'hintable': False}]))
                 gbk.add_goal(Goal(self, 'Zora Sapphire', { 'replace': 'Zora Sapphire' }, 'Blue', items=[{'name': 'Zora Sapphire', 'quantity': 1, 'minimum': 1, 'hintable': False}]))
@@ -941,24 +938,24 @@ class World:
                     else self.settings.lacs_rewards)
             if ((self.settings.ganon_bosskey_medallions > 0
                     and self.settings.shuffle_ganon_bosskey == 'medallions'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_medallions > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_medallions > 2 or self.settings.bridge != 'vanilla'))
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_medallions > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_medallions > 2 or self.settings.bridge != 'vanilla'))
                 or (self.settings.lacs_medallions > 0
                     and self.settings.shuffle_ganon_bosskey == 'on_lacs' and self.settings.lacs_condition == 'medallions'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_medallions > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_medallions > 2 or self.settings.bridge != 'vanilla'))
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_medallions > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_medallions > 2 or self.settings.bridge != 'vanilla'))
                 or (self.settings.ganon_bosskey_rewards > 0
                     and self.settings.shuffle_ganon_bosskey == 'dungeons'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.ganon_bosskey_rewards > 2 or self.settings.bridge != 'vanilla'))
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.ganon_bosskey_rewards > 2 or self.settings.bridge != 'vanilla'))
                 or (self.settings.lacs_rewards > 0
                     and self.settings.shuffle_ganon_bosskey == 'on_lacs' and self.settings.lacs_condition == 'dungeons'
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
-                    and (self.shuffle_special_dungeon_entrances or self.settings.lacs_rewards > 2 or self.settings.bridge != 'vanilla'))):
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > self.settings.bridge_medallions or self.settings.bridge != 'medallions')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > self.settings.bridge_stones or self.settings.bridge != 'stones')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > self.settings.bridge_rewards or self.settings.bridge != 'dungeons')
+                    and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower or self.settings.lacs_rewards > 2 or self.settings.bridge != 'vanilla'))):
                 gbk.add_goal(Goal(self, 'Forest Medallion', { 'replace': 'Forest Medallion' }, 'Green', items=[{'name': 'Forest Medallion', 'quantity': 1, 'minimum': 1, 'hintable': False}]))
                 gbk.add_goal(Goal(self, 'Fire Medallion', { 'replace': 'Fire Medallion' }, 'Red', items=[{'name': 'Fire Medallion', 'quantity': 1, 'minimum': 1, 'hintable': False}]))
                 gbk.add_goal(Goal(self, 'Water Medallion', { 'replace': 'Water Medallion' }, 'Blue', items=[{'name': 'Water Medallion', 'quantity': 1, 'minimum': 1, 'hintable': False}]))
@@ -976,7 +973,7 @@ class World:
             gbk.goal_count = len(gbk.goals)
             if (self.settings.ganon_bosskey_tokens > 0
                 and self.settings.shuffle_ganon_bosskey == 'tokens'
-                and (self.shuffle_special_dungeon_entrances
+                and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower
                         or self.settings.bridge != 'tokens'
                         or self.settings.bridge_tokens < self.settings.ganon_bosskey_tokens)):
                 gbk.add_goal(Goal(self, 'Skulls', 'path of #Skulls#', 'Pink', items=[{'name': 'Gold Skulltula Token', 'quantity': 100, 'minimum': self.settings.ganon_bosskey_tokens, 'hintable': False}]))
@@ -984,7 +981,7 @@ class World:
                 gbk.minimum_goals = 1
             if (self.settings.lacs_tokens > 0
                 and self.settings.shuffle_ganon_bosskey == 'on_lacs' and self.settings.lacs_condition == 'tokens'
-                and (self.shuffle_special_dungeon_entrances
+                and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower
                         or self.settings.bridge != 'tokens'
                         or self.settings.bridge_tokens < self.settings.lacs_tokens)):
                 gbk.add_goal(Goal(self, 'Skulls', 'path of #Skulls#', 'Pink', items=[{'name': 'Gold Skulltula Token', 'quantity': 100, 'minimum': self.settings.lacs_tokens, 'hintable': False}]))
@@ -992,7 +989,7 @@ class World:
                 gbk.minimum_goals = 1
             if (self.settings.ganon_bosskey_hearts > self.settings.starting_hearts
                 and self.settings.shuffle_ganon_bosskey == 'hearts'
-                and (self.shuffle_special_dungeon_entrances
+                and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower
                         or self.settings.bridge != 'hearts'
                         or self.settings.bridge_hearts < self.settings.ganon_bosskey_hearts)):
                 gbk.add_goal(Goal(self, 'hearts', 'path of #hearts#', 'Red', items=[{'name': 'Piece of Heart', 'quantity': (20 - self.settings.starting_hearts) * 4, 'minimum': (self.settings.ganon_bosskey_hearts - self.settings.starting_hearts) * 4, 'hintable': False}]))
@@ -1000,7 +997,7 @@ class World:
                 gbk.minimum_goals = 1
             if (self.settings.lacs_hearts > self.settings.starting_hearts
                 and self.settings.shuffle_ganon_bosskey == 'on_lacs' and self.settings.lacs_condition == 'hearts'
-                and (self.shuffle_special_dungeon_entrances
+                and (self.shuffle_special_dungeon_entrances or self.settings.shuffle_ganon_tower
                         or self.settings.bridge != 'hearts'
                         or self.settings.bridge_hearts < self.settings.lacs_hearts)):
                 gbk.add_goal(Goal(self, 'hearts', 'path of #hearts#', 'Red', items=[{'name': 'Piece of Heart', 'quantity': (20 - self.settings.starting_hearts) * 4, 'minimum': (self.settings.lacs_hearts - self.settings.starting_hearts) * 4, 'hintable': False}]))
@@ -1026,32 +1023,39 @@ class World:
 
             # To avoid too many goals in the hint selection phase,
             # trials are reduced to one goal with six items to obtain.
-            if not self.skipped_trials['Forest']:
-                trial_goal.items.append({'name': 'Forest Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Fire']:
-                trial_goal.items.append({'name': 'Fire Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Water']:
-                trial_goal.items.append({'name': 'Water Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Shadow']:
-                trial_goal.items.append({'name': 'Shadow Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Spirit']:
-                trial_goal.items.append({'name': 'Spirit Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Light']:
-                trial_goal.items.append({'name': 'Light Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+            if self.settings.shuffle_ganon_tower:
+                trial_goal.items.append({'name': 'Ganons Tower Access', 'quantity': 1, 'minimum': 1, 'hintable': True})
                 trials.goal_count += 1
 
-            # Trials category is finalized and saved only if at least one trial is on
-            # If random trials are on and one world in multiworld gets 0 trials, still
-            # add the goal to prevent key errors. Since no items fulfill the goal, it
-            # will always be invalid for that world and not generate hints.
-            if self.settings.trials > 0 or self.settings.trials_random:
                 trials.add_goal(trial_goal)
                 self.goal_categories[trials.name] = trials
+            else:
+                if not self.skipped_trials['Forest']:
+                    trial_goal.items.append({'name': 'Forest Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Fire']:
+                    trial_goal.items.append({'name': 'Fire Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Water']:
+                    trial_goal.items.append({'name': 'Water Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Shadow']:
+                    trial_goal.items.append({'name': 'Shadow Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Spirit']:
+                    trial_goal.items.append({'name': 'Spirit Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Light']:
+                    trial_goal.items.append({'name': 'Light Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+
+                # Trials category is finalized and saved only if at least one trial is on
+                # If random trials are on and one world in multiworld gets 0 trials, still
+                # add the goal to prevent key errors. Since no items fulfill the goal, it
+                # will always be invalid for that world and not generate hints.
+                if self.settings.trials > 0 or self.settings.trials_random:
+                    trials.add_goal(trial_goal)
+                    self.goal_categories[trials.name] = trials
 
             # In glitched logic or if trials are off, it's possible that some items required to beat the game
             # (such as bow, magic, light arrows, or anything required to reach Ganon's Castle)
