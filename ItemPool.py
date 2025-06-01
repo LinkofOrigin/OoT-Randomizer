@@ -915,7 +915,7 @@ def get_pool_core(world: World) -> tuple[list[str], dict[str, Item]]:
             else:
                 pending_junk_pool.append(rupee)
 
-    if world.settings.free_scarecrow:
+    if world.settings.scarecrow_behavior == 'free':
         world.state.collect(ItemFactory('Scarecrow Song', world))
 
     if world.settings.no_epona_race:

@@ -3314,12 +3314,22 @@ class SettingInfos:
         shared         = True,
     )
 
-    free_scarecrow = Checkbutton(
-        gui_text       = "Free Scarecrow's Song",
+    scarecrow_behavior = Combobox(
+        gui_text       = 'Scarecrow Behavior',
+        default        = 'vanilla',
+        choices        = {
+            'vanilla':   'Vanilla',
+            'fast':   'Fast',
+            'free':  'Free',
+        },
         gui_tooltip    = '''\
-            Pulling out the Ocarina near a
-            spot at which Pierre can spawn will
-            do so, without needing the song.
+            "Fast" will require setting the same song
+            both as child and adult, but pulling out
+            the Ocarina near a spot at which Pierre can
+            spawn will do so, without needing the song.
+
+            "Free" removes both the need to set the song first
+            and to play the song to summon Pierre.
         ''',
         shared         = True,
     )

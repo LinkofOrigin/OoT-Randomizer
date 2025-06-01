@@ -2,6 +2,7 @@
 
 * New settings for more control over special deal prices.
 * The `Randomize Ocarina Melodies` setting has a new option to randomize the Frogs 2 melody.
+* The `Free Scarecrow's Song` setting has been renamed to `Scarecrow Behavior`, with a new `Fast` option.
 
 # 8.3
 
