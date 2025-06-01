@@ -1,5 +1,7 @@
 # Dev
 
+* New settings for more control over special deal prices.
+
 # 8.3
 
 ## New Settings and Options
