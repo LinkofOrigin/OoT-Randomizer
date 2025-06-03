@@ -10,6 +10,7 @@
 
 ## Other changes
 * Big poe souls can now be collected while riding Epona.
+* Ice traps have a new item model that's displayed instead of nothing after being picked up.
 
 # 8.3
 
