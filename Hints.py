@@ -1819,14 +1819,18 @@ def build_misc_item_hints(world: World, messages: list[Message], allow_duplicate
 
 def build_misc_location_hints(world: World, messages: list[Message]) -> None:
     for hint_type, data in misc_location_hint_table.items():
+        if any(hint_type in hint_types for hint_types in misc_dual_hint_table):
+            continue # handled in build_misc_dual_hints
         text = data['location_fallback']
         if hint_type == 'big_poes':
             # Special cased because we need to insert the big poes number.
             item = world.misc_hint_location_items[hint_type]
             poe_points = world.settings.big_poe_count * 100
             if hint_type in world.settings.misc_hints:
-                text = data['location_text'].format(item=get_hint(get_item_generic_name(item),
-                                                                    world.settings.clearer_hints).text, poe_points=poe_points)
+                text = data['location_text'].format(
+                    item=get_hint(get_item_generic_name(item), world.settings.clearer_hints).text,
+                    poe_points=poe_points,
+                )
             else:
                 text = data['location_fallback'].format(poe_points=poe_points)
             update_message_by_id(messages, data['id'], text, data['text_style'])
@@ -1835,33 +1839,36 @@ def build_misc_location_hints(world: World, messages: list[Message]) -> None:
             if hint_type in world.settings.misc_hints:
                 if hint_type in world.misc_hint_location_items:
                     item = world.misc_hint_location_items[hint_type]
-                    text = data['location_text'].format(item=get_hint(get_item_generic_name(item),
-                                                                        world.settings.clearer_hints).text)
+                    text = data['location_text'].format(
+                        item=get_hint(get_item_generic_name(item), world.settings.clearer_hints).text,
+                    )
+                update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'])
 
-                update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'], allow_duplicates=True)
-            # Allows for other misc hints to use 'location_fallback, but avoids the mask hints from being overwritten.
-            if hint_type not in ['skull_mask', 'mask_of_truth'] and hint_type not in world.settings.misc_hints:
-                update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'], allow_duplicates=True)
 
 def build_misc_dual_hints(world: World, messages: list[Message]) -> None:
-    for hint_type, data in misc_dual_hint_table.items():
-        # Change misc_hints list to use the Skull Mask and Mask of Truth Dual hint
-        if 'skull_mask' in world.settings.misc_hints and 'mask_of_truth' in world.settings.misc_hints:
-            world.settings.misc_hints.remove('skull_mask')
-            world.settings.misc_hints.remove('mask_of_truth')
-            world.settings.misc_hints.append('mask_shop_dual')
-        text = data['location_fallback']
-        if hint_type in world.settings.misc_hints:
-            keys = list(world.misc_dual_hint_items.keys())
-            items = []
-            for key in keys:
-                item = world.misc_dual_hint_items[key]
-                items.append(item)
-            item_1 = items[0]
-            item_2 = items[1]
-            text = data['location_text'].format(item_1=get_hint(get_item_generic_name(item_1), world.settings.clearer_hints).text, item_2=get_hint(get_item_generic_name(item_2), world.settings.clearer_hints).text)
-            update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'], allow_duplicates=True)
-
+    for (hint_type1, hint_type2), data in misc_dual_hint_table.items():
+        item_1 = world.misc_hint_location_items[hint_type1]
+        item_2 = world.misc_hint_location_items[hint_type2]
+        if hint_type1 in world.settings.misc_hints and hint_type1 in world.misc_hint_location_items:
+            if hint_type2 in world.settings.misc_hints and hint_type2 in world.misc_hint_location_items:
+                text = data['location_text'].format(
+                    item_1=get_hint(get_item_generic_name(item_1), world.settings.clearer_hints).text,
+                    item_2=get_hint(get_item_generic_name(item_2), world.settings.clearer_hints).text,
+                )
+            else:
+                text = misc_location_hint_table[hint_type1]['location_text'].format(
+                    item=get_hint(get_item_generic_name(item_1), world.settings.clearer_hints).text,
+                )
+        else:
+            if hint_type2 in world.settings.misc_hints and hint_type2 in world.misc_hint_location_items:
+                text = misc_location_hint_table[hint_type2]['location_text'].format(
+                    item=get_hint(get_item_generic_name(item_2), world.settings.clearer_hints).text,
+                )
+            else:
+                if hint_type1 not in world.settings.misc_hints and hint_type2 not in world.settings.misc_hints:
+                    return
+                text = data['location_fallback']
+    update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'])
 
 
 def get_raw_text(string: str) -> str:

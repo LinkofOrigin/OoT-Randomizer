@@ -215,7 +215,7 @@ def tokens_required_by_settings(world: World) -> int:
 # Hints required under certain settings
 conditional_always: dict[str, Callable[[World], bool]] = {
     'Market 10 Big Poes':           lambda world: world.settings.big_poe_count > 3 and 'big_poes' not in world.settings.misc_hints,
-    'Deku Theater Mask of Truth':   lambda world: (not world.settings.complete_mask_quest and 'Mask of Truth' not in world.settings.shuffle_child_trade) and not ('mask_of_truth' not in world.settings.misc_hints or 'mask_shop_dual' not in world.settings.misc_hints),
+    'Deku Theater Mask of Truth':   lambda world: not world.settings.complete_mask_quest and 'Mask of Truth' not in world.settings.shuffle_child_trade and 'mask_of_truth' not in world.settings.misc_hints,
     'Song from Ocarina of Time':    lambda world: stones_required_by_settings(world) < 2,
     'HF Ocarina of Time Item':      lambda world: stones_required_by_settings(world) < 2,
     'Sheik in Kakariko':            lambda world: medallions_required_by_settings(world) < 5,
@@ -1922,7 +1922,6 @@ misc_location_hint_table: dict[str, dict[str, Any]] = {
         'hint_location': 'Deku Theater Skull Mask Hint',
         'item_location': 'Deku Theater Skull Mask',
         'location_text': 'Wearing the \x05\x41Skull Mask\x05\x40 will reward you with \x05\x42{item}\x05\x40.',
-        'location_fallback': '\x05\x42\x06\x3dForest Stage\x04\x01\x05\x40\x06\x14We are waiting to see your\x01\x06\x32beautiful face!\x01\x06\x28Win fabulous prizes!',
         'text_style': 0x13,
     },
     'mask_of_truth': {
@@ -1930,7 +1929,6 @@ misc_location_hint_table: dict[str, dict[str, Any]] = {
         'hint_location': 'Deku Theater Mask of Truth Hint',
         'item_location': 'Deku Theater Mask of Truth',
         'location_text': 'Wearing the \x05\x41Mask of Truth\x05\x40 will reward you with \x05\x42{item}\x05\x40.',
-        'location_fallback': '\x05\x42\x06\x3dForest Stage\x04\x01\x05\x40\x06\x14We are waiting to see your\x01\x06\x32beautiful face!\x01\x06\x28Win fabulous prizes!',
         'text_style': 0x13,
     },
     'big_poes': {
@@ -1939,23 +1937,19 @@ misc_location_hint_table: dict[str, dict[str, Any]] = {
         'item_location': 'Market 10 Big Poes',
         'location_text': "\x08Hey, young man. What's happening \x01today? Do you want\x01\x05\x41{item}\x05\x40?\x04\x1AIf you earn \x05\x41{poe_points} points\x05\x40, you'll\x01be a happy man! Heh heh.\x04\x08Your card now has \x05\x45\x1E\x01 \x05\x40points.\x01Come back again!\x01Heh heh heh!\x02",
         'location_fallback': "\x08Hey, young man. What's happening \x01today? If you have a \x05\x41Poe\x05\x40, I will \x01buy it.\x04\x1AIf you earn \x05\x41{poe_points} points\x05\x40, you'll\x01be a happy man! Heh heh.\x04\x08Your card now has \x05\x45\x1E\x01 \x05\x40points.\x01Come back again!\x01Heh heh heh!\x02",
-        'text_style': 0x03
+        'text_style': 0x03,
     },
 }
 
-# Adds capability for dual misc hints. Required keys "id" for text ID to replace. 'hint_location_0' and 'hint_location_1', name of the hint.  These must have _0 for the first hint and _1 for the second hint.
-# 'item_location_0' and 'item_location_1' the location of the check per spoiler log.   This also must have _0 for the first location and _1 for the second location. 'location_text', is the text for the
-# dual hint where item_1 is the item from item_location_0 and item_2 is the item from item_location_1.  'location_fallback', text to handle if the misc hint is not turned on. 'text_style', argument for text box style.
+# Adds capability for dual misc hints. Only used when neither or both hints are enabled, uses corresponding misc_location_hint_table entries if only one is enabled.
+# 'location_text' is the text for the dual hint where item_1 is the item from item_location_0 and item_2 is the item from item_location_1.
+# 'location_fallback' is the text to handle if neither misc hint is turned on.
 misc_dual_hint_table: dict[str, dict[str, Any]] = {
-    'mask_shop_dual': {
+    ('skull_mask', 'mask_of_truth'): {
         'id': 0x0344,
-        'hint_location_0': 'Deku Theater Skull Mask Hint',
-        'item_location_0': 'Deku Theater Skull Mask',
-        'hint_location_1': 'Deku Theater Mask of Truth Hint',
-        'item_location_1': 'Deku Theater Mask of Truth',
         'location_text': '\x01Wearing the \x05\x41Skull Mask\x05\x40 will reward you with \x05\x42{item_1}\x05\x40.\x04Wearing the \x05\x41Mask of Truth\x05\x40 will reward you with \x05\x42{item_2}\x05\x40.',
         'location_fallback': '\x05\x42\x06\x3dForest Stage\x04\x01\x05\x40\x06\x14We are waiting to see your\x01\x06\x32beautiful face!\x01\x06\x28Win fabulous prizes!',
-        'text_style': 0x13
+        'text_style': 0x13,
     },
 }
 
