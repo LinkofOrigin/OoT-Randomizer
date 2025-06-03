@@ -8,6 +8,9 @@
 ## Bug fixes
 * The Deku Shield pot in the Spirit Temple is no longer shuffled when both `Fix Broken Drops` and `Include Empty Pots` are off.
 
+## Other changes
+* Big poe souls can now be collected while riding Epona.
+
 # 8.3
 
 ## New Settings and Options
