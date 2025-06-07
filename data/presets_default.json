@@ -405,13 +405,13 @@
         "custom_ice_trap_count": 100,
         "ice_trap_appearance": "anything"
     },
-    "Standard Weekly (2025-06-06)": {
+    "Standard Weekly (2025-06-07)": {
         "aliases": [
             "Standard Weekly (Latest)",
             "weekly"
         ],
         "show_seed_info": true,
-        "user_message": "Standard Weekly (2025-06-06)",
+        "user_message": "Standard Weekly (2025-06-07)",
         "world_count": 1,
         "create_spoiler": true,
         "password_lock": false,
