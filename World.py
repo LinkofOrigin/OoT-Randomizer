@@ -254,6 +254,8 @@ class World:
         if self.settings.shuffle_ganon_bosskey == 'tokens':
             max_tokens = max(max_tokens, self.settings.ganon_bosskey_tokens)
         tokens = [50, 40, 30, 20, 10]
+        if self.settings.shuffle_100_skulltula_rupee:
+            tokens = [100, 50, 40, 30, 20, 10]
         for t in tokens:
             if f'Kak {t} Gold Skulltula Reward' not in self.settings.disabled_locations:
                 max_tokens = max(max_tokens, t)
