@@ -1866,8 +1866,6 @@ def build_misc_dual_hints(world: World, messages: list[Message]) -> None:
                     item=get_hint(get_item_generic_name(item_2), world.settings.clearer_hints).text,
                 )
             else:
-                if hint_type1 not in world.settings.misc_hints and hint_type2 not in world.settings.misc_hints:
-                    return
                 text = data['location_fallback']
     update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'])
 
