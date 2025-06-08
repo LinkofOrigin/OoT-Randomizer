@@ -437,7 +437,7 @@
         "bridge_hearts": 20,
         "trials_random": false,
         "trials": 0,
-        "shuffle_ganon_bosskey": "medallions",
+        "shuffle_ganon_bosskey": "remove",
         "ganon_bosskey_medallions": 6,
         "ganon_bosskey_stones": 3,
         "ganon_bosskey_rewards": 9,
