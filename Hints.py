@@ -1843,7 +1843,7 @@ def build_misc_location_hints(world: World, messages: list[Message]) -> None:
                     text = data['location_text'].format(
                         item=get_hint(get_item_generic_name(item), world.settings.clearer_hints).text,
                     )
-                update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'])
+            update_message_by_id(messages, data['id'], str(GossipText(text, ['Green'], prefix='')), data['text_style'])
 
 
 def build_misc_dual_hints(world: World, messages: list[Message]) -> None:
