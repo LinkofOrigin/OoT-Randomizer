@@ -623,17 +623,7 @@ class SettingInfos:
         default        = False,
         disable        = {
             True: {
-                'sections': ['shuffle_section'],
-                'settings': [
-                    'open_forest', 'open_kakariko', 'open_door_of_time', 'zora_fountain', 'gerudo_fortress', 'dungeon_shortcuts_choice',
-                    'dungeon_shortcuts', 'trials_random', 'trials',
-                    'starting_age', 'shuffle_interior_entrances', 'shuffle_hideout_entrances', 'shuffle_gerudo_fortress_heart_piece',
-                    'shuffle_grotto_entrances', 'shuffle_dungeon_entrances',
-                    'shuffle_bosses', 'shuffle_overworld_entrances', 'shuffle_gerudo_valley_river_exit', 'owl_drops', 'warp_songs', 'spawn_positions',
-                    'triforce_hunt', 'triforce_count_per_world', 'triforce_goal_per_world', 'free_bombchu_drops', 'one_item_per_dungeon',
-                    'shuffle_mapcompass', 'shuffle_smallkeys', 'shuffle_hideoutkeys', 'shuffle_tcgkeys', 'key_rings_choice', 'key_rings',
-                    'shuffle_silver_rupees', 'silver_rupee_pouches_choice', 'silver_rupee_pouches', 'shuffle_bosskeys', 'enhance_map_compass',
-                ],
+                'sections': ['open_section', 'world_section', 'shuffle_section', 'shuffle_dungeon_section'],
             },
         },
         shared         = True,
@@ -2002,8 +1992,8 @@ class SettingInfos:
             'random': 'Random # of Items Per Shop',
         },
         disable        = {
-            'off':  {'settings': ['shopsanity_prices']},
-            '0':    {'settings': ['shopsanity_prices']},
+            'off':  {'settings': ['special_deal_price_distribution', 'special_deal_price_min', 'special_deal_price_max']},
+            '0':    {'settings': ['special_deal_price_distribution', 'special_deal_price_min', 'special_deal_price_max']},
         },
         gui_tooltip    = '''\
             Randomizes Shop contents.
@@ -2044,36 +2034,73 @@ class SettingInfos:
         },
     )
 
-    shopsanity_prices = Combobox(
-        gui_text         = 'Shopsanity Prices',
-        default          = 'random',
+    special_deal_price_distribution = Combobox(
+        gui_text         = 'Special Deal Prices',
+        default          = 'betavariate',
         choices          = {
-            'random':          "Random",
-            'random_starting': "Starting Wallet",
-            'random_adult':    "Adult's Wallet",
-            'random_giant':    "Giant's Wallet",
-            'random_tycoon':   "Tycoon's Wallet",
-            'affordable':      "Affordable",
+            'vanilla':     'Vanilla',
+            'betavariate': 'Weighted',
+            'uniform':     'Uniform',
+        },
+        disable          = {
+            'vanilla': {'settings': ['special_deal_price_min', 'special_deal_price_max']},
         },
         gui_tooltip      = '''\
-            Controls the randomization of prices for shopsanity items.
-            For more control, utilize the plandomizer.
+            Controls how the prices for Special Deal items in shops are
+            selected. For more control, utilize the plandomizer.
 
-            'Random': The default randomization. Shop prices for
-            shopsanity items will range between 0 to 300 rupees,
-            with a bias towards values slightly below the middle of the
-            range, in multiples of 5.
+            'Vanilla': Each item will be sold for the price of the item
+            that appears in its slot in the vanilla game.
 
-            'X Wallet': Shop prices for shopsanity items will range
-            between 0 and the specified wallet's maximum capacity,
-            in multiples of 5.
+            'Weighted': Shop prices will be biased towards slightly below
+            the middle of the selected range, with very low or very high
+            prices only appearing rarely.
 
-            'Affordable': Shop prices for shopsanity items will be
-            fixed to 10 rupees.
+            'Uniform': Each price value in the selected range is equally
+            likely.
         ''',
-        disabled_default =  'random',
         shared           = True,
         gui_params       = {
+            "hide_when_disabled": True,
+        },
+    )
+
+    special_deal_price_min = Scale(
+        gui_text       = 'Minimum Special Deal Price',
+        default        = 0,
+        minimum        = 0,
+        maximum        = 995,
+        step           = 5,
+        shared         = True,
+        gui_tooltip    = '''\
+            Select the minimum price in rupees for Special Deal
+            items in shops. Prices will be selected randomly in
+            multiples of 5 according to the "Special Deal Price
+            Distribution" setting. Set this setting and "Maximum
+            Special Deal Price" to the same value to give all
+            Special Deals a fixed price.
+        ''',
+        gui_params     = {
+            "hide_when_disabled": True,
+        },
+    )
+
+    special_deal_price_max = Scale(
+        gui_text       = 'Maximum Special Deal Price',
+        default        = 300,
+        minimum        = 0,
+        maximum        = 995,
+        step           = 5,
+        shared         = True,
+        gui_tooltip    = '''\
+            Select the maximum price in rupees for Special Deal
+            items in shops. Prices will be selected randomly in
+            multiples of 5 according to the "Special Deal Price
+            Distribution" setting. Set this setting and "Minimum
+            Special Deal Price" to the same value to give all
+            Special Deals a fixed price.
+        ''',
+        gui_params     = {
             "hide_when_disabled": True,
         },
     )
@@ -2469,6 +2496,20 @@ class SettingInfos:
             and shuffles the rewards from playing Zelda's Lullaby,
             Epona's Song, Saria's Song, Sun's Song, and Song of Time
             to the frogs in Zora's River.
+        ''',
+        default        = False,
+        shared         = True,
+        gui_params     = {
+            'randomize_key': 'randomize_settings',
+        },
+    )
+
+    shuffle_100_skulltula_rupee = Checkbutton(
+        gui_text       = 'Shuffle 100 Skulltula Reward',
+        gui_tooltip    = '''\
+            Enabling this adds the repeatable Huge Rupee reward
+            from the Skulltula house to the item pool. This is obtained
+            by collecting all 100 gold skulltulas.
         ''',
         default        = False,
         shared         = True,
@@ -3287,12 +3328,22 @@ class SettingInfos:
         shared         = True,
     )
 
-    free_scarecrow = Checkbutton(
-        gui_text       = "Free Scarecrow's Song",
+    scarecrow_behavior = Combobox(
+        gui_text       = 'Scarecrow Behavior',
+        default        = 'vanilla',
+        choices        = {
+            'vanilla':   'Vanilla',
+            'fast':   'Fast',
+            'free':  'Free',
+        },
         gui_tooltip    = '''\
-            Pulling out the Ocarina near a
-            spot at which Pierre can spawn will
-            do so, without needing the song.
+            "Fast" will require setting the same song
+            both as child and adult, but pulling out
+            the Ocarina near a spot at which Pierre can
+            spawn will do so, without needing the song.
+
+            "Free" removes both the need to set the song first
+            and to play the song to summon Pierre.
         ''',
         shared         = True,
     )
@@ -3531,19 +3582,22 @@ class SettingInfos:
     misc_hints = MultipleSelect(
         gui_text        = 'Misc. Hints',
         choices         = {
-            'altar':       'Temple of Time Altar',
-            'dampe_diary': "Dampé's Diary (Hookshot)",
-            'ganondorf':   'Ganondorf (Light Arrows)',
-            'warp_songs_and_owls':  'Warp Songs and Owls',
-            '10_skulltulas':  'House of Skulltula: 10',
-            '20_skulltulas':  'House of Skulltula: 20',
-            '30_skulltulas':  'House of Skulltula: 30',
-            '40_skulltulas':  'House of Skulltula: 40',
-            '50_skulltulas':  'House of Skulltula: 50',
-            'frogs2':         'Frogs Ocarina Game',
-            'mask_shop':  'Shuffled Mask Shop',
-            'unique_merchants':  'Unique Merchants',
-            'big_poes':  'Market Big Poes',
+            'altar':               'Temple of Time Altar',
+            'dampe_diary':         "Dampé's Diary (Hookshot)",
+            'ganondorf':           'Ganondorf (Light Arrows)',
+            'warp_songs_and_owls': 'Warp Songs and Owls',
+            '10_skulltulas':       'House of Skulltula: 10',
+            '20_skulltulas':       'House of Skulltula: 20',
+            '30_skulltulas':       'House of Skulltula: 30',
+            '40_skulltulas':       'House of Skulltula: 40',
+            '50_skulltulas':       'House of Skulltula: 50',
+            '100_skulltulas':      'House of Skulltula: 100',
+            'frogs2':              'Frogs Ocarina Game',
+            'mask_shop':           'Shuffled Mask Shop',
+            'unique_merchants':    'Unique Merchants',
+            'big_poes':            'Market Big Poes',
+            'skull_mask':          'Deku Theater Skull Mask',
+            'mask_of_truth':       'Deku Theater Mask of Truth',
         },
         gui_tooltip    = '''\
             This setting adds some hints at locations
@@ -3584,7 +3638,7 @@ class SettingInfos:
             Placing yourself on the log at Zora River
             where you play the songs for the frogs will
             tell you what the reward is for playing all
-            six non warp songs.
+            six non-warp songs.
 
             If shuffled, right side items in the mask
             shop will be visible but not obtainable
@@ -3600,6 +3654,9 @@ class SettingInfos:
 
             The Poe collector will tell the reward for selling
             him Big Poes.
+
+            The sign in Deku Theater will tell the reward for showing
+            the Skull Mask and/or the Mask of Truth.
         ''',
         shared         = True,
         default        = ['altar', 'ganondorf', 'warp_songs_and_owls'],
@@ -3781,20 +3838,33 @@ class SettingInfos:
         },
     )
 
-    ocarina_songs = Combobox(
+    ocarina_songs = MultipleSelect(
         gui_text       = 'Randomize Ocarina Melodies',
-        default        = 'off',
+        default        = [],
         choices        = {
-            'off': 'Off',
-            'frog': 'Frog Songs Only',
-            'warp': 'Warp Songs Only',
-            'all':  'All Songs',
+            'frog':   'Top Row Songs',
+            'warp':   'Warp Songs',
+            'frogs2': 'Frogs Ocarina Game',
         },
         gui_tooltip    = '''\
             Will need to memorize a new set of songs.
             Can be silly, but difficult. All songs are
             generally sensible, but warp songs are
-            typically more difficult than frog songs.
+            typically more difficult than top row
+            songs.
+
+            "Top Row Songs": Randomizes Zelda's Lullaby,
+            Epona's Song, Saria's Song, Sun's Song,
+            Song of Time, and Song of Storms.
+
+            "Warp Songs": Randomizes Minuet of Forest,
+            Bolero of Fire, Serenade of Water, Requiem
+            of Spirit, Nocturne of Shadow, and Prelude
+            of Light.
+
+            "Frogs Ocarina Game": Randomizes the 14
+            notes of the final song of the Fabulous
+            Five Froggish Tenors.
             ''',
         shared         = True,
     )
@@ -3969,9 +4039,6 @@ class SettingInfos:
             fail to generate, consider turning this option off.
         ''',
         shared         = True,
-        gui_params     = {
-            'randomize_key': 'randomize_settings',
-        },
     )
 
     item_pool_value = Combobox(

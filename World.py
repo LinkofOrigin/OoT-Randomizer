@@ -11,7 +11,7 @@ from typing import Any, Optional
 from Dungeon import Dungeon
 from Entrance import Entrance
 from Goals import Goal, GoalCategory
-from HintList import get_required_hints, misc_item_hint_table, misc_location_hint_table
+from HintList import get_required_hints, misc_item_hint_table, misc_location_hint_table, misc_dual_hint_table
 from Hints import HintArea, hint_dist_keys, hint_dist_files
 from Item import Item, ItemFactory, ItemInfo, make_event_item
 from ItemList import REWARD_COLORS
@@ -155,8 +155,9 @@ class World:
             self.resolve_random_settings()
 
         self.song_notes: dict[str, Song] = generate_song_list(self,
-            frog=settings.ocarina_songs in ('frog', 'all'),
-            warp=settings.ocarina_songs in ('warp', 'all'),
+            frog='frog' in settings.ocarina_songs,
+            warp='warp' in settings.ocarina_songs,
+            frogs2='frogs2' in settings.ocarina_songs,
         )
 
         if len(settings.hint_dist_user) == 0:
@@ -241,7 +242,6 @@ class World:
         self.dungeon_rewards_hinted: bool = settings.shuffle_mapcompass != 'remove' if settings.enhance_map_compass else 'altar' in settings.misc_hints
         self.misc_hint_items: dict[str, str] = {hint_type: self.hint_dist_user.get('misc_hint_items', {}).get(hint_type, data['default_item']) for hint_type, data in misc_item_hint_table.items()}
         self.misc_hint_locations: dict[str, str] = {hint_type: self.hint_dist_user.get('misc_hint_locations', {}).get(hint_type, data['item_location']) for hint_type, data in misc_location_hint_table.items()}
-
         self.state: State = State(self)
 
         # Allows us to cut down on checking whether some items are required
@@ -254,6 +254,8 @@ class World:
         if self.settings.shuffle_ganon_bosskey == 'tokens':
             max_tokens = max(max_tokens, self.settings.ganon_bosskey_tokens)
         tokens = [50, 40, 30, 20, 10]
+        if self.settings.shuffle_100_skulltula_rupee:
+            tokens = [100, 50, 40, 30, 20, 10]
         for t in tokens:
             if f'Kak {t} Gold Skulltula Reward' not in self.settings.disabled_locations:
                 max_tokens = max(max_tokens, t)
@@ -399,7 +401,6 @@ class World:
             dist_keys = self.distribution.distribution.src_dict['_settings'].keys()
         if self.settings.randomize_settings:
             setting_info = SettingInfos.setting_infos['randomize_settings']
-            self.randomized_list.extend(setting_info.disable[True]['settings'])
             for section in setting_info.disable[True]['sections']:
                 self.randomized_list.extend(get_settings_from_section(section))
                 # Remove settings specified in the distribution
@@ -694,18 +695,18 @@ class World:
             for location in region.locations:
                 if location.type == 'Shop':
                     if location.name[-1:] in shop_item_indexes[:shop_item_count]:
-                        if self.settings.shopsanity_prices == 'random':
-                            self.shop_prices[location.name] = int(random.betavariate(1.5, 2) * 60) * 5
-                        elif self.settings.shopsanity_prices == 'random_starting':
-                            self.shop_prices[location.name] = random.randrange(0, 100, 5)
-                        elif self.settings.shopsanity_prices == 'random_adult':
-                            self.shop_prices[location.name] = random.randrange(0, 201, 5)
-                        elif self.settings.shopsanity_prices == 'random_giant':
-                            self.shop_prices[location.name] = random.randrange(0, 501, 5)
-                        elif self.settings.shopsanity_prices == 'random_tycoon':
-                            self.shop_prices[location.name] = random.randrange(0, 1000, 5)
-                        elif self.settings.shopsanity_prices == 'affordable':
-                            self.shop_prices[location.name] = 10
+                        if self.settings.special_deal_price_distribution == 'vanilla':
+                            self.shop_prices[location.name] = ItemInfo.items[location.vanilla_item].price
+                        elif self.settings.special_deal_price_max < self.settings.special_deal_price_min:
+                            raise ValueError('Maximum special deal price is lower than minimum, perhaps you meant to swap them?')
+                        elif self.settings.special_deal_price_max == self.settings.special_deal_price_min:
+                            self.shop_prices[location.name] = self.settings.special_deal_price_min
+                        elif self.settings.special_deal_price_distribution == 'betavariate':
+                            self.shop_prices[location.name] = self.settings.special_deal_price_min + int(random.betavariate(1.5, 2) * (self.settings.special_deal_price_max - self.settings.special_deal_price_min) / 5) * 5
+                        elif self.settings.special_deal_price_distribution == 'uniform':
+                            self.shop_prices[location.name] = random.randrange(self.settings.special_deal_price_min, self.settings.special_deal_price_max + 1, 5)
+                        else:
+                            raise NotImplementedError(f'Unimplemented special deal distribution: {self.settings.special_deal_price_distribution}')
 
     def set_scrub_prices(self) -> None:
         # Get Deku Scrub Locations
@@ -1023,32 +1024,39 @@ class World:
 
             # To avoid too many goals in the hint selection phase,
             # trials are reduced to one goal with six items to obtain.
-            if not self.skipped_trials['Forest']:
-                trial_goal.items.append({'name': 'Forest Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Fire']:
-                trial_goal.items.append({'name': 'Fire Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Water']:
-                trial_goal.items.append({'name': 'Water Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Shadow']:
-                trial_goal.items.append({'name': 'Shadow Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Spirit']:
-                trial_goal.items.append({'name': 'Spirit Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
-                trials.goal_count += 1
-            if not self.skipped_trials['Light']:
-                trial_goal.items.append({'name': 'Light Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+            if self.settings.shuffle_ganon_tower:
+                trial_goal.items.append({'name': 'Ganons Tower Access', 'quantity': 1, 'minimum': 1, 'hintable': True})
                 trials.goal_count += 1
 
-            # Trials category is finalized and saved only if at least one trial is on
-            # If random trials are on and one world in multiworld gets 0 trials, still
-            # add the goal to prevent key errors. Since no items fulfill the goal, it
-            # will always be invalid for that world and not generate hints.
-            if self.settings.trials > 0 or self.settings.trials_random:
                 trials.add_goal(trial_goal)
                 self.goal_categories[trials.name] = trials
+            else:
+                if not self.skipped_trials['Forest']:
+                    trial_goal.items.append({'name': 'Forest Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Fire']:
+                    trial_goal.items.append({'name': 'Fire Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Water']:
+                    trial_goal.items.append({'name': 'Water Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Shadow']:
+                    trial_goal.items.append({'name': 'Shadow Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Spirit']:
+                    trial_goal.items.append({'name': 'Spirit Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+                if not self.skipped_trials['Light']:
+                    trial_goal.items.append({'name': 'Light Trial Clear', 'quantity': 1, 'minimum': 1, 'hintable': True})
+                    trials.goal_count += 1
+
+                # Trials category is finalized and saved only if at least one trial is on
+                # If random trials are on and one world in multiworld gets 0 trials, still
+                # add the goal to prevent key errors. Since no items fulfill the goal, it
+                # will always be invalid for that world and not generate hints.
+                if self.settings.trials > 0 or self.settings.trials_random:
+                    trials.add_goal(trial_goal)
+                    self.goal_categories[trials.name] = trials
 
             # In glitched logic or if trials are off, it's possible that some items required to beat the game
             # (such as bow, magic, light arrows, or anything required to reach Ganon's Castle)
