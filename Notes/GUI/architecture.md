@@ -46,23 +46,16 @@ utils/settings_list.json contains every single setting of the GUI as an array of
   1. name: Internal name of the option value
   2. text: Name of the option as shown to the user
   3. tooltip: The tooltip shown to the user when he hovers over the option. This is only supported by SearchBox at the moment. Line breaks are again added by a `<br>` tag
-  4. controls_visibility_tab: What tab(s) to disable when this option is selected. Multiple tabs can be separated by comma and are addressed by their internal name (see mapping.json structure)
-  5. controls_visibility_section: What section(s) to disable when this option is selected
-  6. controls_visibility_setting: What specific setting(s) to disable when this option is selected
-* conditional_controls &rarr; A list of "conditions" that can alter this setting's state. This allows other settings to alter this setting by altering its visibility, enabled state, and value.
-  1. A condition is written as an object with a key to an inner object. The key has no functional purpose and is purely for human reabaility and debugging purposes.
-  2. Conditions have 4 keys:
-     * value: The value the setting should be changed to if the condition passes.
-     * enabled: `True` will enable the setting if the condition passes, and `False` will disable the setting.
-     * visible: `True` will hide the setting from the UI if the condition passes, and `False` will show the setting.
-     * conditions: A list of "partial conditions" that determine if this condition passes or not.
-  3. Partial conditions are listed as an array of objects representing other settings.
-     * Each object is a list of key -> value pairs of "setting_name" -> "setting_value".
-     * If at least one of these pairs matches the current state of the settings, the partial condition will pass. Otherwise it will fail. (This provides `OR` logic)
-  4. All "partial conditions" must pass for the full condition to also pass. (This provides `AND` logic
-  5. If the full condition passes, the setting will be updated to reflect the given value, enabled, and visible states. All of these are optional, any that are excluded will remain unchanged from the current setting state when the condition passes.
-  6. A setting can have multiple conditions as you see fit. The first condition that passes will take priority in altering the setting and the following conditions will not be evaluated.
-  7. If a setting would be disabled by some other logic (eg. 'controls_visibility_setting'), that will take priority over ALL condition-based logic. When this happens, the setting state will not be changed even if a passing condition would normally do so.
+  4. controls-visibility-tab: What tab(s) to disable when this option is selected. Multiple tabs can be separated by comma and are addressed by their internal name (see mapping.json structure)
+  5. controls-visibility-section: What section(s) to disable when this option is selected
+  6. controls-visibility-setting: What specific setting(s) to disable when this option is selected
+* conditional-controls &rarr; An object of "conditions" that can alter this setting's visibility, enabled state, and value based on the state of other settings. This object can contain multiple items that each define their own conditions and target state for the setting. The first condition that passes will take priority in altering the setting and the other conditions will not be evaluated. If this setting would be disabled by some other logic (eg. 'controls_visibility_setting'), that will take priority over ALL condition-based logic. When this happens, the setting state will not be changed even if a passing condition would normally do so. The format of a condition object is as follows:
+  * "key" -> {object}: "key" has no functional purpose and is purely for human readability and debugging purposes. "object" contains key/value pairs that define the behavior of the condition.
+    * value: If the condition passes, the setting will be changed to this value.
+    * enabled: If the condition passes, `True` will enable the setting and `False` will disable it.
+    * visible: If the condition passes, `True` will display the setting in the UI if the condition passes and `False` will hide it.
+    * conditions: A list of "partial condition" objects that determine if this condition passes or not. All "partial conditions" must pass for the full condition to also pass. (This provides `AND` logic)
+      * Each partial condition contains "key" -> "value" pairs in the format of "setting_name" -> "setting_value". If at least one of these pairs matches the current state of the settings, the partial condition will pass. Otherwise it will fail. (This provides `OR` logic)
 
 ### The settings_mapping.json structure
 
