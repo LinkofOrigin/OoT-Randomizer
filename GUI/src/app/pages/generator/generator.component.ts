@@ -1291,33 +1291,35 @@ export class GeneratorComponent implements OnInit {
     // NOTE: We are treating any setting under "controls_visibility_setting" as one
     //       that should be disabled by the current option. Could be worth renaming...
     let settingsDisabled = []; // Setting names in here are being disabled and take priority over any changes made by conditional logic
-    targetSetting["controls_visibility_setting"].split(",").forEach(setting => {
+    if (targetSetting["controls_visibility_setting"] != null) {
+      targetSetting["controls_visibility_setting"].split(",").forEach(setting => {
 
-      //Ignore settings that don't exist in this specific app
-      if (!(setting in this.global.generator_settingsVisibilityMap))
-        return;
+        //Ignore settings that don't exist in this specific app
+        if (!(setting in this.global.generator_settingsVisibilityMap))
+          return;
 
-      let enabledChildren = false;
+        let enabledChildren = false;
 
-      // We are about to disable this setting.
-      // If this is currently enabled, attempt to re-enable any settings that it
-      // may be disabling on its own. If it's disabled, it shouldn't also disable other settings.
-      if (targetValue == false && this.settingIsEnabled(setting)) {
-        enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
-        settingsDisabled.push(setting);
-      }
+        // We are about to disable this setting.
+        // If this is currently enabled, attempt to re-enable any settings that it
+        // may be disabling on its own. If it's disabled, it shouldn't also disable other settings.
+        if (targetValue == false && this.settingIsEnabled(setting)) {
+          enabledChildren = this.clearDeactivationsOfSetting(this.global.findSettingByName(setting));
+          settingsDisabled.push(setting);
+        }
 
-      // We are about to enable this setting.
-      // If this setting is currently disabled, note that we are triggering a change.
-      // Alternatively, if disabling this setting causes any other settings to be
-      // enabled due to it being disabled, then also note that we are triggering a change.
-      if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
-        triggeredChange = true;
+        // We are about to enable this setting.
+        // If this setting is currently disabled, note that we are triggering a change.
+        // Alternatively, if disabling this setting causes any other settings to be
+        // enabled due to it being disabled, then also note that we are triggering a change.
+        if ((targetValue == true && !this.settingIsEnabled(setting)) || (enabledChildren)) //Only trigger change if a (sub) setting gets re-enabled
+          triggeredChange = true;
 
-      // targetValue = true => This setting will be enabled.
-      // targetValue = false  => This setting will be disabled.
-      this.global.generator_settingsVisibilityMap[setting] = targetValue;
-    });
+        // targetValue = true => This setting will be enabled.
+        // targetValue = false  => This setting will be disabled.
+        this.global.generator_settingsVisibilityMap[setting] = targetValue;
+      });
+    }
     
     // If a setting won't be forcibly disabled, allow conditions to update the setting
     for (let settingName in conditionalSettingUpdates) {
@@ -1335,7 +1337,7 @@ export class GeneratorComponent implements OnInit {
   private getConditionallyChangedSettingsForOption(settingOption: any) {
     let conditionalSettingUpdates = {};
     if (settingOption["conditionally_controls_setting"] != null) {
-      settingOption["conditionally_controls_setting"].split(",").forEach(setting => {
+      settingOption["conditionally_controls_setting"].forEach(setting => {
 
         let dependentSetting = this.global.findSettingByName(setting);
         if (dependentSetting.conditional_controls != null) {
@@ -1364,6 +1366,7 @@ export class GeneratorComponent implements OnInit {
     // There may be multiple combinations of conditions that may alter this setting.
     // We'll check each one, and if one of them passes we'll use that to determine the setting's state.
     let settingConditions = setting.conditional_controls;
+    let conditionHasDisabled = false;
     for (let conditionName in settingConditions) {
       var conditionToTest = settingConditions[conditionName];
       let conditionList = conditionToTest['conditions'];
@@ -1393,8 +1396,17 @@ export class GeneratorComponent implements OnInit {
         targetSettingState['value'] = conditionToTest['value'] != null ? conditionToTest['value'] : targetSettingState['value'];
         targetSettingState['enabled'] = conditionToTest['enabled'] != null ? conditionToTest['enabled'] : targetSettingState['enabled'];
         targetSettingState['visible'] = conditionToTest['visible'] != null ? conditionToTest['visible'] : targetSettingState['visible'];
+        if (targetSettingState['enabled'] == false) {
+          conditionHasDisabled = true;
+        }
         break; // First condition that passes wins and takes priority
       }
+    }
+
+    // The setting is currently disabled, but no conditions are attempting to disable it.
+    // Let's re-enable it and the old "disable" logic can take priority if needed.
+    if (!conditionHasDisabled && targetSettingState['enabled'] == false) {
+      targetSettingState['enabled'] = true;
     }
 
     return targetSettingState;

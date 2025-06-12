@@ -298,9 +298,9 @@ def resolve_conditional_control_dependencies(output_json: dict) -> None:
                         setting_obj_option_json = setting_obj_json['options'][setting_value]
                         if setting_obj_option_json is not None:
                             if 'conditionally_controls_setting' not in setting_obj_option_json:
-                                setting_obj_option_json['conditionally_controls_setting'] = dependent_setting_name
+                                setting_obj_option_json['conditionally_controls_setting'] = [dependent_setting_name]
                             elif dependent_setting_name not in setting_obj_option_json['conditionally_controls_setting']:
-                                setting_obj_option_json['conditionally_controls_setting'] += ',' + dependent_setting_name
+                                setting_obj_option_json['conditionally_controls_setting'].append(dependent_setting_name)
 
                     # Handle the setting in the "array" portion of the json
                     setting_array_json = find_setting_array_json_in_output(setting_name, output_json)
@@ -308,9 +308,9 @@ def resolve_conditional_control_dependencies(output_json: dict) -> None:
                         for setting_array_option_json in setting_array_json['options']:
                             if setting_array_option_json['name'] is setting_value:
                                 if 'conditionally_controls_setting' not in setting_array_option_json:
-                                    setting_array_option_json['conditionally_controls_setting'] = dependent_setting_name
+                                    setting_array_option_json['conditionally_controls_setting'] = [dependent_setting_name]
                                 elif dependent_setting_name not in setting_array_option_json['conditionally_controls_setting']:
-                                    setting_array_option_json['conditionally_controls_setting'] += ',' + dependent_setting_name
+                                    setting_array_option_json['conditionally_controls_setting'].append(dependent_setting_name)
                                 break # bail early(...bad idea?)
 
 
