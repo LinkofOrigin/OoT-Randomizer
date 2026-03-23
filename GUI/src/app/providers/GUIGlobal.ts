@@ -469,7 +469,15 @@ export class GUIGlobal implements OnDestroy {
 
   async parseGeneratorGUISettings(guiSettings, userSettings) {
     const isRGBHex = /[0-9A-Fa-f]{6}/;
-    globalThis.Settings = {};
+    /*
+      !! DEBUGGING ONLY !!
+      This value can be accessed via the browser console as simply 'SettingsListZOOTR_Angular'
+      and is only intended for debugging. The current list of settings as they appear in the UI
+      will be accessible via this variable. Their values will be objects representing their current
+      state and metadata as is relevant, including a direct JSON-decoded object of that settings'
+      data from the generated settings list JSON file.
+    */
+    globalThis.SettingsListZOOTR_Angular = {};
 
     //Intialize settings maps
     for (let tabIndex = 0; tabIndex < guiSettings.settingsArray.length; tabIndex++) {
@@ -532,7 +540,7 @@ export class GUIGlobal implements OnDestroy {
           // Bind a property as a function that returns an object representing this setting for easy debugging
           // By using the setting name as the property name, it allows for auto-complete and fuzzy searching/suggestions
           // This works by binding a property to a getter function that has the current 'this' value bound to the function context
-          Object.defineProperty(globalThis.Settings, setting.name, {
+          Object.defineProperty(globalThis.SettingsListZOOTR_Angular, setting.name, {
             get: () => {
               return {
                 // Object representing the current state of this setting. Add more values as you see fit.
