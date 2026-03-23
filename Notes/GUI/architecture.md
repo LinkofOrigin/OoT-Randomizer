@@ -53,7 +53,6 @@ utils/settings_list.json contains every single setting of the GUI as an array of
   * "key" -> {object}: "key" has no functional purpose and is purely for human readability and debugging purposes. "object" contains key/value pairs that define the behavior of the condition.
     * value: If the condition passes, the setting will be changed to this value.
     * enabled: If the condition passes, `True` will enable the setting and `False` will disable it.
-    * visible: If the condition passes, `True` will display the setting in the UI if the condition passes and `False` will hide it.
     * conditions: A list of "partial condition" objects that determine if this condition passes or not. All "partial conditions" must pass for the full condition to also pass. (This provides `AND` logic)
       * Each partial condition contains "key" -> "value" pairs in the format of "setting_name" -> "setting_value". If at least one of these pairs matches the current state of the settings, the partial condition will pass. Otherwise it will fail. (This provides `OR` logic)
 
